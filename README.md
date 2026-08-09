@@ -95,6 +95,25 @@ Set every variable from `.env.example` in the host's environment settings —
 never in the repo. Then run `npm run db:migrate` against the production
 database.
 
+### A note on Neon's Vercel integration
+
+The integration marks every variable it creates as **Sensitive**, so
+`vercel env pull` and the dashboard both return the literal string
+`[SENSITIVE]` instead of the value. The variables are set correctly — they
+just cannot be read back. Deployed code gets the real values.
+
+To run migrations against production, take the pooled connection string from
+the Neon console (Connection Details → pooling on), not from Vercel:
+
+```bash
+DATABASE_URL='<neon pooled string>' npm run db:migrate
+DATABASE_URL='<neon pooled string>' npm run legislators:import
+```
+
+`node --env-file=.env.vercel scripts/db-diagnose.mjs` prints the shape of every
+database variable with credentials stripped, and explains this case when it
+sees it.
+
 ### Launch checklist
 
 Run `npm run preflight` against the production environment. It exits non-zero

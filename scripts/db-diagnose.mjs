@@ -14,6 +14,22 @@ const names = Object.keys(process.env)
   .filter((k) => /^(DATABASE|POSTGRES|PG|NEON)/i.test(k) && !/PASSWORD/i.test(k))
   .sort()
 
+const redacted = names.filter((n) => process.env[n] === '[SENSITIVE]')
+
+if (redacted.length > 0) {
+  console.log(
+    `\n  ${redacted.length} variable(s) came back as the literal string "[SENSITIVE]".\n` +
+      '  That is Vercel\'s redaction placeholder, not a broken value. Variables\n' +
+      '  created by a marketplace integration (Neon, Upstash, and so on) are\n' +
+      '  marked Sensitive, so their real values can never be read back — not by\n' +
+      '  `vercel env pull`, not by the dashboard.\n\n' +
+      '  It means the variables ARE set correctly in Vercel; you just cannot see\n' +
+      '  them from here. Deployed code receives the real values.\n\n' +
+      '  To run migrations locally, take the connection string from the Neon\n' +
+      '  console (Connection Details, pooling on) rather than from Vercel.\n',
+  )
+}
+
 console.log('database-ish variables present:\n')
 
 for (const name of names) {
