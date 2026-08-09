@@ -50,7 +50,8 @@ DATABASE_SSL=false
 - `/` — landing + sign-up form (accepts `?c=CENTER_CODE` for attribution)
 - `/join` — the same page under the short URL printed on the poster
 - `/poster` — letter-size printable break room poster with a generated QR code
-- `/privacy`, `/unsubscribe` — placeholder pages; content pending counsel and an ESP
+- `/privacy` — full notice describing actual data handling; needs counsel sign-off
+- `/unsubscribe` — placeholder; needs an email provider before it can work
 - `/admin` — district density, aggregate only. Gated by `middleware.ts`; returns
   503 unless `AUTH_SECRET`, `ADMIN_PASSWORD`, and `ADMIN_ALLOWED_EMAILS` are set
 - `/admin/login` — email + shared password, HMAC-signed 8-hour session
@@ -69,9 +70,10 @@ The sign-up site's look comes from the Claude Design handoff
 background, terracotta and sage accents, Caprasimo display over Figtree body.
 Tokens live in `tailwind.config.ts`, component classes in `app/globals.css`.
 
-This replaced the earlier navy/gold placeholders. Sponsor branding is still an
-open decision (Doc 01) — the wordmark slot in `app/layout.tsx` stays typographic
-and swappable, and no company logo is baked in.
+This replaced the earlier navy/gold placeholders. The site presents as the
+coalition "Georgia Licensed Child Care Network" (confirmed 2026-08-09); the
+wordmark stays typographic and no company logo is baked in, so a rebrand is a
+config change in `lib/sponsor.ts`.
 
 One deliberate deviation from the handoff: its `--color-accent` fill gives only
 3.03:1 against its own button label, below AA at 16px. `.btn-primary` uses
