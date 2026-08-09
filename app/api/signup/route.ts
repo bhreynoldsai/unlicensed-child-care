@@ -7,9 +7,17 @@ import {
   SMS_CONSENT_TEXT,
   consentHash,
 } from '@/lib/consent'
+import { checkRateLimit } from '@/lib/rate-limit'
+import { verifyTurnstile } from '@/lib/turnstile'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+
+/**
+ * Generous enough that a break room full of staff on one Wi-Fi network can all
+ * sign up, tight enough that a script cannot flood the supporter table.
+ */
+const SIGNUP_RATE_LIMIT = { max: 20, windowSeconds: 60 * 60 }
 
 function clientIp(req: Request): string | null {
   const fwd = req.headers.get('x-forwarded-for')
@@ -18,11 +26,39 @@ function clientIp(req: Request): string | null {
 }
 
 export async function POST(req: Request) {
+  const requestIp = clientIp(req)
+
+  const limit = await checkRateLimit({
+    scope: 'signup',
+    identifier: requestIp ?? 'unknown',
+    ...SIGNUP_RATE_LIMIT,
+  })
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { message: 'Too many sign-ups from this connection. Please try again later.' },
+      { status: 429, headers: { 'retry-after': String(limit.retryAfterSeconds) } },
+    )
+  }
+
   let json: unknown
   try {
     json = await req.json()
   } catch {
     return NextResponse.json({ message: 'Invalid request body.' }, { status: 400 })
+  }
+
+  // Bot check before validation: no point geocoding or touching the database
+  // for a request that cannot prove it came from a browser.
+  const turnstileToken = (json as { turnstileToken?: unknown } | null)?.turnstileToken
+  const humanVerified = await verifyTurnstile(
+    typeof turnstileToken === 'string' ? turnstileToken : undefined,
+    requestIp,
+  )
+  if (!humanVerified) {
+    return NextResponse.json(
+      { message: 'We could not verify that request. Please reload the page and try again.' },
+      { status: 403 },
+    )
   }
 
   const parsed = signupSchema.safeParse(json)
@@ -36,7 +72,7 @@ export async function POST(req: Request) {
   }
 
   const d = parsed.data
-  const ip = clientIp(req)
+  const ip = requestIp
   const userAgent = req.headers.get('user-agent')
 
   // Geocode both addresses (Doc 02 §4). Never block sign-up on a geocoder

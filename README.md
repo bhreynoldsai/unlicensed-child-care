@@ -73,10 +73,29 @@ One deliberate deviation from the handoff: its `--color-accent` fill gives only
 
 ## Deploying
 
-Vercel + a managed Postgres (Neon, Supabase, or Vercel Postgres) is the
-shortest path. Set every variable from `.env.example` in the host's
-environment settings — never in the repo.
+**Vercel + Neon Postgres**, with DNS staying at Cloudflare where the domain is
+registered — point a CNAME at Vercel with the proxy off.
 
-Before anything is publicly reachable: add auth on `/admin`, add rate
-limiting on `/api/signup`, fill in the CAN-SPAM footer, and get counsel
-review of the consent language and employer-solicitation approach.
+Vercel rather than Cloudflare Workers because `lib/db.ts` uses `pg` with real
+multi-statement transactions, and `app/api/signup/route.ts` depends on that:
+supporter, consent rows, and district matches commit together or not at all.
+Workers would need Hyperdrive or Neon's serverless driver, whose HTTP mode does
+not do cross-statement transactions — meaning a rewrite of the one function
+whose atomicity is a compliance property.
+
+Set every variable from `.env.example` in the host's environment settings —
+never in the repo. Then run `npm run db:migrate` against the production
+database.
+
+### Launch checklist
+
+- [ ] `AUTH_SECRET`, `ADMIN_PASSWORD`, `ADMIN_ALLOWED_EMAILS` set. `/admin`
+      returns 503 without them, so verify it loads before announcing anything.
+- [ ] `TURNSTILE_SECRET_KEY` and `NEXT_PUBLIC_TURNSTILE_SITE_KEY` set.
+      **Bot verification is skipped entirely when the secret is absent.**
+- [ ] `NEXT_PUBLIC_SITE_URL` set before printing posters — the QR encodes it.
+- [ ] CAN-SPAM footer: sponsoring entity and physical postal address.
+- [ ] Privacy notice content, and an unsubscribe that actually unsubscribes.
+- [ ] `robots` flipped to `index: true` in `app/layout.tsx`.
+- [ ] Counsel review of the consent language and the employer-solicitation
+      approach.

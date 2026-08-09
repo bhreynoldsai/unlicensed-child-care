@@ -5,6 +5,7 @@ import { useRef, useState } from 'react'
 import { ConsentCheckbox, Fieldset, SelectField, TextField } from '@/components/Field'
 import { HouseIcon } from '@/components/icons'
 import SuccessCard, { type MatchedDistricts } from '@/components/SuccessCard'
+import { Turnstile } from '@/components/Turnstile'
 import { EMAIL_CONSENT_TEXT, SMS_CONSENT_TEXT } from '@/lib/consent'
 import { ROLES, ROLE_LABELS, collectIssues, signupSchema } from '@/lib/validation'
 
@@ -65,6 +66,7 @@ export default function SignupForm({ centerCode }: { centerCode: string | null }
   const [status, setStatus] = useState<Status>('idle')
   const [message, setMessage] = useState(SUBMIT_ERROR)
   const [districts, setDistricts] = useState<MatchedDistricts | null>(null)
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const bannerRef = useRef<HTMLParagraphElement>(null)
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -99,6 +101,7 @@ export default function SignupForm({ centerCode }: { centerCode: string | null }
       otherPhone: fields.otherPhone || undefined,
       roleOther: fields.roleOther || null,
       sourceCenterCode: centerCode,
+      turnstileToken,
     }
 
     // Validate against the same schema the API enforces.
@@ -391,6 +394,7 @@ export default function SignupForm({ centerCode }: { centerCode: string | null }
         </Fieldset>
 
         <div>
+          <Turnstile onToken={setTurnstileToken} />
           <button type="submit" className="btn-primary" disabled={submitting}>
             {submitting ? <span className="spinner" /> : null}
             {submitting ? 'Signing you up…' : 'Sign up and find my legislators'}

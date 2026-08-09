@@ -96,8 +96,13 @@ receives and how their voice is framed to a legislator.
 
 ## Known gaps — do these before launch
 
-- [ ] **Auth on `/admin`.** There is none. Do not deploy that route publicly.
-- [ ] Rate limiting + bot protection (Turnstile/hCaptcha) on `/api/signup`.
+- [x] **Auth on `/admin`.** Gated by `middleware.ts`, fails closed without
+      `AUTH_SECRET` + `ADMIN_PASSWORD` + `ADMIN_ALLOWED_EMAILS` (Doc 02 §10).
+      Still to do: set real values in the host's environment, and rotate
+      `ADMIN_PASSWORD` whenever someone leaves the team.
+- [x] Rate limiting + bot protection on `/api/signup` (Doc 02 §9). Turnstile
+      verification is **skipped when `TURNSTILE_SECRET_KEY` is unset** — setting
+      it is a launch requirement, not an option.
 - [ ] Legislator roster: join district numbers to names so the confirmation
       screen says "Your Representative is …" (Doc 02 §6).
 - [ ] Unsubscribe and privacy-notice **content**. The pages exist and the footer

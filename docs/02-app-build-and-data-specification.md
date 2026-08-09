@@ -125,3 +125,51 @@ All keys (geocoder fallback, SMS, email) are read from environment
 variables; none are committed or pasted into chat. A .env.example in the
 repository will document each variable and where Bernard should add the
 value.
+
+9\. Abuse Control
+
+*Amended 2026-08-09. The sign-up form is public and writes to the
+supporter database, so it needs abuse control before the URL is shared.*
+
+Two layers:
+
+- **Cloudflare Turnstile** on the sign-up form. Chosen over image
+  challenges because most supporters arrive by QR scan on a phone during
+  a break; a puzzle between the scan and the submit is a real conversion
+  cost. Verification fails closed — if the challenge cannot be checked,
+  the submission is refused. Keys come from the environment
+  (`TURNSTILE_SECRET_KEY`); with no key set, verification is skipped, so
+  the key is a launch requirement, not an option.
+
+- **Per-IP rate limiting** on sign-up (20/hour) and admin login (5 per
+  15 minutes). The sign-up ceiling is set so a whole break room sharing
+  one Wi-Fi network can still enrol, while a script cannot flood the
+  table.
+
+This adds one table, `rate_limits` (`db/002_rate_limits.sql`), whose
+operational use is exactly the above. Per §2's minimum-necessary rule it
+stores **no personal data**: the client identifier is kept as a SHA-256
+hash, never a raw IP. The raw IP that belongs in the legal record is
+already captured on `consent_events`. Rows are disposable and expire with
+their window; sweep them from the same job that runs the Doc 03 §6
+retention pass.
+
+The rate limiter fails **open** if the database is unavailable — the
+deliberate opposite of Turnstile. Losing a real supporter costs the
+campaign more than letting a burst through, and Turnstile still stands in
+front of the endpoint.
+
+10\. Administrative Access
+
+`/admin` is gated by `middleware.ts` and fails closed: without
+`AUTH_SECRET`, `ADMIN_PASSWORD`, and `ADMIN_ALLOWED_EMAILS` the route is
+unavailable rather than unprotected. An administrator signs in with their
+own email — checked against the allowlist on every request, so removal
+revokes access immediately — plus a shared password. Sessions are
+HMAC-signed cookies with an eight-hour life.
+
+A shared password cannot distinguish two people who both know it. That is
+acceptable for a short campaign with a handful of staff and a rotating
+secret, and the per-admin email still gives `export_audit.admin_email`
+something real to record. It should become SSO or email magic links once
+an identity provider or ESP exists.
