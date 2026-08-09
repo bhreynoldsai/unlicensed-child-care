@@ -63,18 +63,29 @@ These are not style preferences. Violating one is a program risk, not a bug.
 ```
 app/
   page.tsx              landing + sign-up
+  join/page.tsx         re-exports the landing page at the poster's short URL
+  poster/               printable break room poster + its print stylesheet
+  privacy/, unsubscribe/  placeholder pages behind the footer links
   admin/page.tsx        district density (AGGREGATE ONLY — no auth yet)
   api/signup/route.ts   validate → geocode → insert supporter + consent + match
   api/health/route.ts
-components/SignupForm.tsx
+components/SignupForm.tsx  form, validation display, submit states
+components/Field.tsx       input, select, consent checkbox, fieldset primitives
+components/SuccessCard.tsx matched districts + share link
+components/icons.tsx       inline SVG icon set
 lib/consent.ts          verbatim consent language + hashing  ← counsel-reviewed
 lib/validation.ts       zod schema, role enum, phone normalization
 lib/districts.ts        Census geocoder + district resolution
 lib/db.ts               pool + withTransaction
+lib/site.ts             public URL and share link
 db/001_init.sql         schema, density view
 scripts/                migrate, rematch-districts
 docs/                   the four governing plans
 ```
+
+The sign-up form validates client-side with the same `signupSchema` the API
+enforces, so the two cannot disagree about what is valid. The API still
+re-validates everything — the client check is a courtesy, never a gate.
 
 ## Role values
 
@@ -89,12 +100,20 @@ receives and how their voice is framed to a legislator.
 - [ ] Rate limiting + bot protection (Turnstile/hCaptcha) on `/api/signup`.
 - [ ] Legislator roster: join district numbers to names so the confirmation
       screen says "Your Representative is …" (Doc 02 §6).
-- [ ] Unsubscribe and privacy-notice pages (footer links are dead).
+- [ ] Unsubscribe and privacy-notice **content**. The pages exist and the footer
+      links resolve, but both are placeholders: `/privacy` needs counsel text
+      against Doc 03, and `/unsubscribe` needs wiring to an ESP and to
+      `supporters.status = 'unsubscribed'`.
 - [ ] Sponsoring entity + postal address in the footer (CAN-SPAM).
 - [ ] Commercial geocoder fallback (`lib/districts.ts` → `fallbackMatch`).
 - [ ] CSV export with `export_audit` logging (Doc 02 §5).
-- [ ] QR / shareable link on the confirmation screen.
+- [x] QR / shareable link on the confirmation screen. `/poster` generates the
+      QR from `SHARE_URL`; the confirmation screen offers the same link with a
+      copy button.
 - [ ] Retention job: 24-month inactivity re-consent-or-purge (Doc 03 §6).
+- [ ] Confirm the hero photo's licensing, or replace it. It arrived with the
+      design handoff as user-supplied stock, and it sits against the design
+      brief's own "avoid stock photos of smiling children" guidance.
 
 ## Open decisions (don't invent answers)
 

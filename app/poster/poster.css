@@ -1,0 +1,137 @@
+/* Poster layout in physical units — the artboard is a sheet of Letter paper, so
+   inches beat rems here. On screen the sheet previews centered on a neutral
+   field; in print it is the page.
+
+   Colors are literal rather than Tailwind classes because this file is also the
+   print stylesheet, and a printer needs the exact ink. */
+
+@page {
+  size: letter;
+  margin: 0;
+}
+
+/* The poster is a standalone artifact, not a page of the site — strip the app
+   chrome the root layout wraps every route in. */
+body:has(.poster-sheet) > div > header,
+body:has(.poster-sheet) > div > footer {
+  display: none;
+}
+
+/* Tint the whole viewport, not just the sheet's box, so the preview reads as a
+   sheet of paper on a desk rather than a beige block on a beige page. */
+html:has(.poster-sheet) {
+  background: #dcd3c4;
+}
+
+.poster-sheet {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 24px;
+  background: #dcd3c4;
+}
+
+.poster-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 8.5in;
+  height: 11in;
+  padding: 0.9in 0.8in;
+  text-align: center;
+  background: #f5ead8;
+  color: #201e1d;
+  box-shadow: 0 3px 10px rgba(46, 43, 37, 0.16);
+}
+
+.poster-badge {
+  display: grid;
+  place-content: center;
+  flex: none; /* the column flex parent would otherwise squash it to an oval */
+  width: 64px;
+  height: 64px;
+  margin-bottom: 0.35in;
+  border-radius: 50%;
+  background: #e1eecc;
+  color: #3d472b;
+}
+
+.poster-headline {
+  max-width: 8in;
+  margin: 0 0 0.3in;
+  font-size: 52px;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+}
+
+.poster-lede {
+  max-width: 6.6in;
+  margin: 0 0 0.5in;
+  font-size: 22px;
+  line-height: 1.5;
+  color: rgba(32, 30, 29, 0.85);
+}
+
+.poster-qr {
+  width: 3.6in;
+  height: 3.6in;
+  margin-bottom: 0.5in;
+}
+
+.poster-qr svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.poster-notice {
+  max-width: 6.4in;
+  margin: 0 0 0.35in;
+  padding: 0.22in 0.3in;
+  border-radius: 16px;
+  background: #f0fae1;
+  color: #3d472b;
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.poster-url {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: rgba(32, 30, 29, 0.6);
+}
+
+/* Small screens preview the sheet scaled down rather than scrolled sideways. */
+@media screen and (max-width: 9in) {
+  .poster-sheet {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .poster-page {
+    transform: scale(min(1, calc((100vw - 24px) / 8.5in)));
+    transform-origin: center;
+  }
+}
+
+@media print {
+  .poster-sheet {
+    display: block;
+    min-height: 0;
+    padding: 0;
+    background: none;
+  }
+
+  .poster-page {
+    width: 100%;
+    height: 100vh;
+    transform: none;
+    box-shadow: none;
+  }
+}

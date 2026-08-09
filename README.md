@@ -45,9 +45,31 @@ DATABASE_SSL=false
 ## Routes
 
 - `/` — landing + sign-up form (accepts `?c=CENTER_CODE` for attribution)
+- `/join` — the same page under the short URL printed on the poster
+- `/poster` — letter-size printable break room poster with a generated QR code
+- `/privacy`, `/unsubscribe` — placeholder pages; content pending counsel and an ESP
 - `/admin` — district density, aggregate only. **No authentication yet.**
 - `/api/signup` — POST, validates, geocodes, writes supporter + consent + match
 - `/api/health` — DB connectivity check
+
+To print the poster: open `/poster`, print at Letter, no margins, background
+graphics on. The QR encodes `NEXT_PUBLIC_SITE_URL` + `/join`, so set that
+variable **before** printing anything.
+
+## Design
+
+The sign-up site's look comes from the Claude Design handoff
+(`design_handoff_signup_site`), built on the "Organic" design system: sand
+background, terracotta and sage accents, Caprasimo display over Figtree body.
+Tokens live in `tailwind.config.ts`, component classes in `app/globals.css`.
+
+This replaced the earlier navy/gold placeholders. Sponsor branding is still an
+open decision (Doc 01) — the wordmark slot in `app/layout.tsx` stays typographic
+and swappable, and no company logo is baked in.
+
+One deliberate deviation from the handoff: its `--color-accent` fill gives only
+3.03:1 against its own button label, below AA at 16px. `.btn-primary` uses
+`accent-700` instead — same hue, two steps down the ramp, 5.72:1.
 
 ## Deploying
 

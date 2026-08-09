@@ -7,7 +7,15 @@
     -webkit-text-size-adjust: 100%;
   }
   body {
-    @apply bg-navy-50 text-navy-900 antialiased;
+    @apply bg-sand text-ink antialiased;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-heading font-normal;
+    line-height: 1.12;
+    letter-spacing: -0.015em;
   }
   /* 16px minimum on inputs stops iOS Safari from zooming on focus —
      this form is used on phones in break rooms. */
@@ -16,27 +24,113 @@
   textarea {
     font-size: 16px;
   }
+  /* No default browser focus ring anywhere — themed rings only. */
+  :focus {
+    outline: none;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-accent;
+  }
+  ::selection {
+    background: rgba(198, 113, 57, 0.3);
+  }
 }
 
 @layer components {
   .field-label {
-    @apply block text-sm font-medium text-navy-900 mb-1;
+    @apply mb-1.5 block text-sm text-ink/[.78];
   }
+
+  /* 48px minimum height for touch. */
   .field-input {
-    @apply w-full rounded-md border border-navy-300 bg-white px-3 py-2.5 text-navy-900
-           shadow-sm outline-none transition
-           focus:border-navy-700 focus:ring-2 focus:ring-gold-300;
+    @apply w-full min-h-[48px] rounded-md border-[1.5px] border-ink/[.16] bg-surface
+           px-3.5 py-3 text-base text-ink transition
+           hover:border-ink/[.45]
+           focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent;
   }
+
+  .field-input[aria-invalid='true'] {
+    @apply border-danger;
+  }
+
   .field-error {
-    @apply mt-1 text-sm text-red-700;
+    @apply mt-1.5 text-[13px] text-danger;
   }
+
+  /* The primary button is the single most important control on the page.
+     The design system's own --color-accent fill gives only 3.03:1 against its
+     label, below AA at 16px; accent-700 is the same hue two steps down the
+     ramp and clears it at 5.72:1. */
   .btn-primary {
-    @apply w-full rounded-md bg-navy-700 px-4 py-3 text-base font-semibold text-white
-           shadow-sm transition hover:bg-navy-900
-           focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2
-           disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex w-full min-h-[52px] items-center justify-center gap-2 rounded-full
+           bg-accent-700 px-4 py-3 font-heading text-base text-sand transition
+           hover:bg-accent-800 active:bg-accent-900
+           disabled:cursor-not-allowed;
   }
+
+  /* Only ever disabled mid-submit, alongside a spinner and a "Signing you up…"
+     label. Fading it would drop the label under AA exactly when someone is
+     watching it, so it darkens instead of dimming. */
+  .btn-primary:disabled {
+    @apply bg-accent-900 opacity-100;
+  }
+
+  .btn-compact {
+    @apply w-full min-h-0 px-4 py-2 text-sm sm:w-auto;
+  }
+
   .section-heading {
-    @apply text-sm font-semibold uppercase tracking-wide text-navy-700 border-b border-navy-100 pb-2 mb-4;
+    @apply mb-1 flex w-full items-center gap-2 font-heading text-xl text-ink;
+  }
+
+  /* Sized to hold ~55 words of legally required text at full contrast, with the
+     whole label row tappable. Never truncate, collapse, or dim this
+     (CLAUDE.md guardrails 1 and 2). */
+  .consent-row {
+    @apply flex min-h-[44px] cursor-pointer items-start gap-3.5 rounded-md
+           border-[1.5px] border-ink/[.16] bg-surface p-4 transition hover:border-ink/[.45];
+  }
+
+  .consent-row[data-invalid='true'] {
+    @apply border-danger;
+  }
+
+  .consent-row input[type='checkbox'] {
+    @apply mt-0.5 h-[22px] w-[22px] flex-none cursor-pointer accent-accent;
+  }
+
+  .consent-row span {
+    @apply text-sm leading-[1.55] text-ink;
+  }
+
+  .consent-row:has(input:focus-visible) {
+    @apply outline-2 outline-offset-2 outline-accent;
+  }
+
+  /* Photos read as texture rather than stock art. */
+  .washed {
+    filter: saturate(0.6) contrast(0.85) brightness(1.1) opacity(0.94);
+  }
+}
+
+@keyframes spin-loader {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2.5px solid rgba(245, 234, 216, 0.6);
+  border-top-color: #f5ead8;
+  border-radius: 50%;
+  animation: spin-loader 0.7s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2.4s;
   }
 }

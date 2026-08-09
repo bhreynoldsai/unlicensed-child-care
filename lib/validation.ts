@@ -79,3 +79,18 @@ export const signupSchema = z
   })
 
 export type SignupInput = z.infer<typeof signupSchema>
+
+/**
+ * Flatten a ZodError into one message per field, keyed by field name. The
+ * sign-up form validates client-side against the same schema the API enforces,
+ * so the two can never disagree about what is valid. This mirrors the shape
+ * `app/api/signup/route.ts` returns on a 422.
+ */
+export function collectIssues(error: z.ZodError): Record<string, string> {
+  const errors: Record<string, string> = {}
+  for (const issue of error.issues) {
+    const key = issue.path.join('.') || '_form'
+    if (!errors[key]) errors[key] = issue.message
+  }
+  return errors
+}

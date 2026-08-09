@@ -1,314 +1,406 @@
 'use client'
 
-import { useState } from 'react'
-import { ROLES, ROLE_LABELS, type Role } from '@/lib/validation'
+import { useRef, useState } from 'react'
+
+import { ConsentCheckbox, Fieldset, SelectField, TextField } from '@/components/Field'
+import { HouseIcon } from '@/components/icons'
+import SuccessCard, { type MatchedDistricts } from '@/components/SuccessCard'
 import { EMAIL_CONSENT_TEXT, SMS_CONSENT_TEXT } from '@/lib/consent'
+import { ROLES, ROLE_LABELS, collectIssues, signupSchema } from '@/lib/validation'
 
-type Errors = Record<string, string>
+type Status = 'idle' | 'submitting' | 'error' | 'success'
 
-interface MatchedLegislators {
-  stateHouse: string | null
-  stateSenate: string | null
-  congressional: string | null
+type FormState = {
+  firstName: string
+  lastName: string
+  email: string
+  cellPhone: string
+  otherPhone: string
+  homeStreet: string
+  homeStreet2: string
+  homeCity: string
+  homeState: string
+  homeZip: string
+  employerName: string
+  employerStreet: string
+  employerCity: string
+  employerState: string
+  employerZip: string
+  role: string
+  roleOther: string
+  emailConsent: boolean
+  smsConsent: boolean
 }
 
+const EMPTY: FormState = {
+  firstName: '',
+  lastName: '',
+  email: '',
+  cellPhone: '',
+  otherPhone: '',
+  homeStreet: '',
+  homeStreet2: '',
+  homeCity: '',
+  homeState: 'GA',
+  homeZip: '',
+  employerName: '',
+  employerStreet: '',
+  employerCity: '',
+  employerState: 'GA',
+  employerZip: '',
+  role: '',
+  roleOther: '',
+  emailConsent: false,
+  smsConsent: false,
+}
+
+const ROLE_OPTIONS = ROLES.map((value) => ({ value, label: ROLE_LABELS[value] }))
+
+const SUBMIT_ERROR =
+  'We could not reach the server. Please check your connection and try again.'
+
 export default function SignupForm({ centerCode }: { centerCode: string | null }) {
-  const [submitting, setSubmitting] = useState(false)
-  const [errors, setErrors] = useState<Errors>({})
-  const [role, setRole] = useState<Role | ''>('')
-  const [done, setDone] = useState<MatchedLegislators | null>(null)
+  const [fields, setFields] = useState<FormState>(EMPTY)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [status, setStatus] = useState<Status>('idle')
+  const [message, setMessage] = useState(SUBMIT_ERROR)
+  const [districts, setDistricts] = useState<MatchedDistricts | null>(null)
+  const bannerRef = useRef<HTMLParagraphElement>(null)
+  const formRef = useRef<HTMLFormElement>(null)
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setSubmitting(true)
-    setErrors({})
+  function set<K extends keyof FormState>(key: K, value: FormState[K]) {
+    setFields((current) => ({ ...current, [key]: value }))
+    // Clear a field's error as soon as it is touched. Re-validation happens on
+    // the next submit, so leaving stale red text under a corrected field would
+    // just be nagging.
+    setErrors((current) => {
+      if (!(key in current)) return current
+      const next = { ...current }
+      delete next[key]
+      return next
+    })
+  }
 
-    const fd = new FormData(e.currentTarget)
+  /** Put focus on the first thing that needs fixing, top to bottom. */
+  function focusFirstError(next: Record<string, string>) {
+    const firstKey = Object.keys(next)[0]
+    if (!firstKey) return
+    const el = formRef.current?.querySelector<HTMLElement>(`[name="${firstKey}"]`)
+    el?.focus()
+    el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
     const payload = {
-      firstName: fd.get('firstName'),
-      lastName: fd.get('lastName'),
-      email: fd.get('email'),
-      cellPhone: fd.get('cellPhone'),
-      otherPhone: fd.get('otherPhone') || undefined,
-      homeStreet: fd.get('homeStreet'),
-      homeStreet2: fd.get('homeStreet2') || null,
-      homeCity: fd.get('homeCity'),
-      homeState: fd.get('homeState') || 'GA',
-      homeZip: fd.get('homeZip'),
-      employerName: fd.get('employerName'),
-      employerStreet: fd.get('employerStreet'),
-      employerCity: fd.get('employerCity'),
-      employerState: fd.get('employerState') || 'GA',
-      employerZip: fd.get('employerZip'),
-      role: fd.get('role'),
-      roleOther: fd.get('roleOther') || null,
+      ...fields,
+      homeStreet2: fields.homeStreet2 || null,
+      otherPhone: fields.otherPhone || undefined,
+      roleOther: fields.roleOther || null,
       sourceCenterCode: centerCode,
-      emailConsent: fd.get('emailConsent') === 'on',
-      smsConsent: fd.get('smsConsent') === 'on',
     }
+
+    // Validate against the same schema the API enforces.
+    const parsed = signupSchema.safeParse(payload)
+    if (!parsed.success) {
+      const next = collectIssues(parsed.error)
+      setErrors(next)
+      setStatus('idle')
+      focusFirstError(next)
+      return
+    }
+
+    setErrors({})
+    setStatus('submitting')
 
     try {
       const res = await fetch('/api/signup', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'content-type': 'application/json' },
         body: JSON.stringify(payload),
       })
-      const body = await res.json()
 
-      if (!res.ok) {
-        setErrors(body.errors ?? { _form: body.message ?? 'Something went wrong. Please try again.' })
-        setSubmitting(false)
-        // Move focus to the first problem so screen readers announce it.
-        document.querySelector<HTMLElement>('[data-error="true"]')?.focus()
+      if (res.status === 422) {
+        const body = (await res.json()) as { errors?: Record<string, string> }
+        const next = body.errors ?? {}
+        setErrors(next)
+        setStatus('idle')
+        focusFirstError(next)
         return
       }
 
-      setDone(body.districts as MatchedLegislators)
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { message?: string } | null
+        setMessage(body?.message ?? SUBMIT_ERROR)
+        setStatus('error')
+        requestAnimationFrame(() => bannerRef.current?.focus())
+        return
+      }
+
+      const body = (await res.json()) as { districts: MatchedDistricts }
+      setDistricts(body.districts)
+      setStatus('success')
     } catch {
-      setErrors({ _form: 'We could not reach the server. Please check your connection and try again.' })
-      setSubmitting(false)
+      // Never log PII — and the caught value may carry the request body.
+      setMessage(SUBMIT_ERROR)
+      setStatus('error')
+      requestAnimationFrame(() => bannerRef.current?.focus())
     }
   }
 
-  if (done) return <Confirmation districts={done} />
+  if (status === 'success' && districts) {
+    return <SuccessCard districts={districts} />
+  }
+
+  const submitting = status === 'submitting'
 
   return (
-    <form onSubmit={onSubmit} noValidate className="space-y-8">
-      {errors._form && (
-        <p role="alert" className="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-red-800">
-          {errors._form}
-        </p>
-      )}
-
-      <fieldset>
-        <legend className="section-heading w-full">Your contact information</legend>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field name="firstName" label="First name" autoComplete="given-name" error={errors.firstName} required />
-          <Field name="lastName" label="Last name" autoComplete="family-name" error={errors.lastName} required />
-        </div>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <Field name="email" label="Email" type="email" autoComplete="email" inputMode="email" error={errors.email} required />
-          <Field name="cellPhone" label="Cell phone" type="tel" autoComplete="mobile tel" inputMode="tel" error={errors.cellPhone} required />
-        </div>
-        <div className="mt-4">
-          <Field
-            name="otherPhone"
-            label="Other phone (optional)"
-            type="tel"
-            autoComplete="tel"
-            inputMode="tel"
-            error={errors.otherPhone}
-          />
-        </div>
-      </fieldset>
-
-      <fieldset>
-        <legend className="section-heading w-full">Your home address</legend>
-        <p className="-mt-2 mb-4 text-sm text-navy-700">
-          We use this only to find which state legislators represent you. Legislators
-          weigh messages from their own constituents most heavily.
-        </p>
-        <Field name="homeStreet" label="Street address" autoComplete="address-line1" error={errors.homeStreet} required />
-        <div className="mt-4">
-          <Field name="homeStreet2" label="Apartment, suite, etc. (optional)" autoComplete="address-line2" error={errors.homeStreet2} />
-        </div>
-        <div className="mt-4 grid gap-4 sm:grid-cols-3">
-          <Field name="homeCity" label="City" autoComplete="address-level2" error={errors.homeCity} required />
-          <Field name="homeState" label="State" autoComplete="address-level1" defaultValue="GA" maxLength={2} error={errors.homeState} required />
-          <Field name="homeZip" label="ZIP" autoComplete="postal-code" inputMode="numeric" error={errors.homeZip} required />
-        </div>
-      </fieldset>
-
-      <fieldset>
-        <legend className="section-heading w-full">Where you work</legend>
-        <Field name="employerName" label="Center or organization name" autoComplete="organization" error={errors.employerName} required />
-        <div className="mt-4">
-          <Field name="employerStreet" label="Street address" error={errors.employerStreet} required />
-        </div>
-        <div className="mt-4 grid gap-4 sm:grid-cols-3">
-          <Field name="employerCity" label="City" error={errors.employerCity} required />
-          <Field name="employerState" label="State" defaultValue="GA" maxLength={2} error={errors.employerState} required />
-          <Field name="employerZip" label="ZIP" inputMode="numeric" error={errors.employerZip} required />
-        </div>
-      </fieldset>
-
-      <fieldset>
-        <legend className="section-heading w-full">Your role</legend>
-        <label htmlFor="role" className="field-label">
-          Which best describes you? <span className="text-red-700">*</span>
-        </label>
-        <select
-          id="role"
-          name="role"
-          required
-          className="field-input"
-          value={role}
-          data-error={errors.role ? 'true' : undefined}
-          onChange={(e) => setRole(e.target.value as Role)}
+    <>
+      {status === 'error' ? (
+        <p
+          ref={bannerRef}
+          role="alert"
+          tabIndex={-1}
+          className="mb-s4 rounded-md border-[1.5px] border-danger/40 bg-danger/[.12] px-4 py-3.5 text-[15px] leading-[1.5] text-danger outline-none"
         >
-          <option value="">Select one…</option>
-          {ROLES.map((r) => (
-            <option key={r} value={r}>
-              {ROLE_LABELS[r]}
-            </option>
-          ))}
-        </select>
-        {errors.role && <p className="field-error">{errors.role}</p>}
+          {message}
+        </p>
+      ) : null}
 
-        {role === 'other' && (
-          <div className="mt-4">
-            <Field name="roleOther" label="Tell us your role" error={errors.roleOther} required />
+      <form ref={formRef} onSubmit={handleSubmit} noValidate className="grid gap-s8">
+        <Fieldset legend="Your contact information">
+          <div className="grid grid-cols-1 gap-s4 sm:grid-cols-2">
+            <TextField
+              id="firstName"
+              label="First name"
+              required
+              autoComplete="given-name"
+              value={fields.firstName}
+              onChange={(v) => set('firstName', v)}
+              error={errors.firstName}
+            />
+            <TextField
+              id="lastName"
+              label="Last name"
+              required
+              autoComplete="family-name"
+              value={fields.lastName}
+              onChange={(v) => set('lastName', v)}
+              error={errors.lastName}
+            />
           </div>
-        )}
-      </fieldset>
+          <div className="mt-s4 grid grid-cols-1 gap-s4 sm:grid-cols-2">
+            <TextField
+              id="email"
+              label="Email"
+              required
+              type="email"
+              autoComplete="email"
+              inputMode="email"
+              value={fields.email}
+              onChange={(v) => set('email', v)}
+              error={errors.email}
+            />
+            <TextField
+              id="cellPhone"
+              label="Cell phone"
+              required
+              type="tel"
+              autoComplete="tel"
+              inputMode="tel"
+              value={fields.cellPhone}
+              onChange={(v) => set('cellPhone', v)}
+              error={errors.cellPhone}
+            />
+          </div>
+          <div className="mt-s4">
+            <TextField
+              id="otherPhone"
+              label="Other phone (optional)"
+              type="tel"
+              autoComplete="tel"
+              inputMode="tel"
+              value={fields.otherPhone}
+              onChange={(v) => set('otherPhone', v)}
+              error={errors.otherPhone}
+            />
+          </div>
+        </Fieldset>
 
-      {/* --------------------------------------------------------------
-          CONSENT — Doc 03 §2.
-          Two separate, unticked checkboxes. Email is required; SMS is
-          additive and must never be pre-checked, bundled, or made a
-          condition of signing up. Do not change this markup or the
-          language without counsel review.
-         -------------------------------------------------------------- */}
-      <fieldset>
-        <legend className="section-heading w-full">How we can reach you</legend>
-
-        <label className="flex gap-3 rounded-md border border-navy-300 bg-white p-4 cursor-pointer">
-          <input
-            type="checkbox"
-            name="emailConsent"
-            className="mt-0.5 h-5 w-5 shrink-0 rounded border-navy-300 text-navy-700 focus:ring-gold-500"
-            data-error={errors.emailConsent ? 'true' : undefined}
+        {/* Doc 03 §4 / brief hard constraint 4: the explanation is positioned so
+            it is read before the address fields, not after. */}
+        <Fieldset
+          legend="Your home address"
+          helper="We use this only to find which state legislators represent you. Legislators weigh messages from their own constituents most heavily."
+        >
+          <TextField
+            id="homeStreet"
+            label="Street address"
+            required
+            autoComplete="address-line1"
+            value={fields.homeStreet}
+            onChange={(v) => set('homeStreet', v)}
+            error={errors.homeStreet}
           />
-          <span className="text-sm leading-relaxed text-navy-900">{EMAIL_CONSENT_TEXT}</span>
-        </label>
-        {errors.emailConsent && <p className="field-error">{errors.emailConsent}</p>}
+          <div className="mt-s4">
+            <TextField
+              id="homeStreet2"
+              label="Apartment, suite, etc. (optional)"
+              autoComplete="address-line2"
+              value={fields.homeStreet2}
+              onChange={(v) => set('homeStreet2', v)}
+              error={errors.homeStreet2}
+            />
+          </div>
+          <div className="mt-s4 grid grid-cols-[2fr_1fr_1fr] gap-s4">
+            <TextField
+              id="homeCity"
+              label="City"
+              required
+              autoComplete="address-level2"
+              value={fields.homeCity}
+              onChange={(v) => set('homeCity', v)}
+              error={errors.homeCity}
+            />
+            <TextField
+              id="homeState"
+              label="State"
+              required
+              autoComplete="address-level1"
+              maxLength={2}
+              value={fields.homeState}
+              onChange={(v) => set('homeState', v.toUpperCase())}
+              error={errors.homeState}
+            />
+            <TextField
+              id="homeZip"
+              label="ZIP"
+              required
+              autoComplete="postal-code"
+              inputMode="numeric"
+              maxLength={10}
+              value={fields.homeZip}
+              onChange={(v) => set('homeZip', v)}
+              error={errors.homeZip}
+            />
+          </div>
+        </Fieldset>
 
-        <label className="mt-4 flex gap-3 rounded-md border border-navy-300 bg-white p-4 cursor-pointer">
-          <input
-            type="checkbox"
-            name="smsConsent"
-            className="mt-0.5 h-5 w-5 shrink-0 rounded border-navy-300 text-navy-700 focus:ring-gold-500"
+        <Fieldset legend="Where you work">
+          <TextField
+            id="employerName"
+            label="Center or organization name"
+            required
+            autoComplete="organization"
+            value={fields.employerName}
+            onChange={(v) => set('employerName', v)}
+            error={errors.employerName}
           />
-          <span className="text-sm leading-relaxed text-navy-900">{SMS_CONSENT_TEXT}</span>
-        </label>
+          <div className="mt-s4">
+            <TextField
+              id="employerStreet"
+              label="Street address"
+              required
+              value={fields.employerStreet}
+              onChange={(v) => set('employerStreet', v)}
+              error={errors.employerStreet}
+            />
+          </div>
+          <div className="mt-s4 grid grid-cols-[2fr_1fr_1fr] gap-s4">
+            <TextField
+              id="employerCity"
+              label="City"
+              required
+              value={fields.employerCity}
+              onChange={(v) => set('employerCity', v)}
+              error={errors.employerCity}
+            />
+            <TextField
+              id="employerState"
+              label="State"
+              required
+              maxLength={2}
+              value={fields.employerState}
+              onChange={(v) => set('employerState', v.toUpperCase())}
+              error={errors.employerState}
+            />
+            <TextField
+              id="employerZip"
+              label="ZIP"
+              required
+              inputMode="numeric"
+              maxLength={10}
+              value={fields.employerZip}
+              onChange={(v) => set('employerZip', v)}
+              error={errors.employerZip}
+            />
+          </div>
+        </Fieldset>
 
-        <p className="mt-3 text-sm text-navy-700">
-          Text alerts are optional — you can sign up with email only.
-        </p>
-      </fieldset>
+        <Fieldset legend="Your role" icon={<HouseIcon size={18} className="text-accent-700" />}>
+          <SelectField
+            id="role"
+            label="Which best describes you?"
+            required
+            options={ROLE_OPTIONS}
+            value={fields.role}
+            onChange={(v) => set('role', v)}
+            error={errors.role}
+          />
+          {fields.role === 'other' ? (
+            <div className="mt-s4">
+              <TextField
+                id="roleOther"
+                label="Tell us your role"
+                required
+                value={fields.roleOther}
+                onChange={(v) => set('roleOther', v)}
+                error={errors.roleOther}
+              />
+            </div>
+          ) : null}
+        </Fieldset>
 
-      <div>
-        <button type="submit" className="btn-primary" disabled={submitting}>
-          {submitting ? 'Signing you up…' : 'Sign up and find my legislators'}
-        </button>
-        <p className="mt-3 text-center text-xs text-navy-700">
-          We never sell or share your information. You can unsubscribe at any time.
-        </p>
-      </div>
-    </form>
-  )
-}
+        {/* Two separate, unticked checkboxes. Never combine, pre-check, style as
+            a toggle, or gate sign-up on SMS (CLAUDE.md guardrail 1). The strings
+            come from lib/consent.ts and are counsel-reviewed — do not reword. */}
+        <Fieldset legend="How we can reach you">
+          <ConsentCheckbox
+            id="emailConsent"
+            checked={fields.emailConsent}
+            onChange={(v) => set('emailConsent', v)}
+            error={errors.emailConsent}
+          >
+            {EMAIL_CONSENT_TEXT}
+          </ConsentCheckbox>
 
-function Field({
-  name,
-  label,
-  error,
-  required,
-  ...rest
-}: {
-  name: string
-  label: string
-  error?: string
-  required?: boolean
-} & React.InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <div>
-      <label htmlFor={name} className="field-label">
-        {label} {required && <span className="text-red-700">*</span>}
-      </label>
-      <input
-        id={name}
-        name={name}
-        required={required}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? `${name}-error` : undefined}
-        data-error={error ? 'true' : undefined}
-        className="field-input"
-        {...rest}
-      />
-      {error && (
-        <p id={`${name}-error`} className="field-error">
-          {error}
-        </p>
-      )}
-    </div>
-  )
-}
+          <div className="mt-s3">
+            <ConsentCheckbox
+              id="smsConsent"
+              checked={fields.smsConsent}
+              onChange={(v) => set('smsConsent', v)}
+            >
+              {SMS_CONSENT_TEXT}
+            </ConsentCheckbox>
+          </div>
 
-/**
- * Doc 02 §6 — showing matched legislators immediately is "the single best
- * moment to make the program feel real."
- */
-function Confirmation({ districts }: { districts: MatchedLegislators }) {
-  const matched = districts.stateHouse || districts.stateSenate
+          <p className="mt-s3 text-sm text-ink/[.75]">
+            Text alerts are optional &mdash; you can sign up with email only.
+          </p>
+        </Fieldset>
 
-  return (
-    <div className="rounded-lg border border-navy-300 bg-white p-6">
-      <h2 className="text-xl font-bold text-navy-900">You&apos;re signed up. Thank you.</h2>
-
-      {matched ? (
-        <>
-          <p className="mt-3 text-navy-900">Based on your home address, you are represented by:</p>
-          <dl className="mt-4 space-y-3">
-            {districts.stateHouse && (
-              <div className="rounded-md bg-navy-50 px-4 py-3">
-                <dt className="text-xs font-semibold uppercase tracking-wide text-navy-700">
-                  Georgia House
-                </dt>
-                <dd className="text-lg font-semibold text-navy-900">
-                  District {districts.stateHouse}
-                </dd>
-              </div>
-            )}
-            {districts.stateSenate && (
-              <div className="rounded-md bg-navy-50 px-4 py-3">
-                <dt className="text-xs font-semibold uppercase tracking-wide text-navy-700">
-                  Georgia Senate
-                </dt>
-                <dd className="text-lg font-semibold text-navy-900">
-                  District {districts.stateSenate}
-                </dd>
-              </div>
-            )}
-            {districts.congressional && (
-              <div className="rounded-md bg-navy-50 px-4 py-3">
-                <dt className="text-xs font-semibold uppercase tracking-wide text-navy-700">
-                  U.S. Congress
-                </dt>
-                <dd className="text-lg font-semibold text-navy-900">
-                  District {districts.congressional}
-                </dd>
-              </div>
-            )}
-          </dl>
-          {/* TODO: join district numbers to legislator names/photos from the
-              GA legislator roster once it is loaded (Doc 04). */}
-        </>
-      ) : (
-        <p className="mt-3 text-navy-900">
-          We&apos;re still matching your address to your legislative districts — we&apos;ll
-          include them in your first email.
-        </p>
-      )}
-
-      <div className="mt-6 border-t border-navy-100 pt-6">
-        <h3 className="font-semibold text-navy-900">Help us reach your coworkers</h3>
-        <p className="mt-1 text-sm text-navy-700">
-          The more licensed providers in each district, the more weight this carries.
-          Share this link with anyone in licensed child care.
-        </p>
-        {/* TODO: render the shareable link + QR code (Doc 02 §6). */}
-      </div>
-    </div>
+        <div>
+          <button type="submit" className="btn-primary" disabled={submitting}>
+            {submitting ? <span className="spinner" /> : null}
+            {submitting ? 'Signing you up…' : 'Sign up and find my legislators'}
+          </button>
+          {/* 70% ink, not 60% — see the note in app/page.tsx. */}
+          <p className="mt-s3 text-center text-[13px] text-ink/[.7]">
+            We never sell or share your information. You can unsubscribe at any time.
+          </p>
+        </div>
+      </form>
+    </>
   )
 }
