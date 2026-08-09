@@ -57,6 +57,9 @@ These are not style preferences. Violating one is a program risk, not a bug.
 - Zod for validation (`lib/validation.ts`) — the API re-validates everything
 - District matching via the free U.S. Census geocoder (`lib/districts.ts`),
   commercial fallback stubbed behind `GEOCODER_FALLBACK_KEY`
+- Legislator roster from OpenStates bulk data (`npm run legislators:import`)
+- Vitest for unit tests (`npm test`) — the consent rules and the relaxed-match
+  guard are the two things worth breaking the build over
 
 ## Layout
 
@@ -103,14 +106,20 @@ receives and how their voice is framed to a legislator.
 - [x] Rate limiting + bot protection on `/api/signup` (Doc 02 §9). Turnstile
       verification is **skipped when `TURNSTILE_SECRET_KEY` is unset** — setting
       it is a launch requirement, not an option.
-- [ ] Legislator roster: join district numbers to names so the confirmation
-      screen says "Your Representative is …" (Doc 02 §6).
+- [x] Legislator roster: the confirmation screen names the member, party, and
+      official page. Refresh with `npm run legislators:import` after every
+      general and special election — stale rows would name a former member.
 - [ ] Unsubscribe and privacy-notice **content**. The pages exist and the footer
       links resolve, but both are placeholders: `/privacy` needs counsel text
       against Doc 03, and `/unsubscribe` needs wiring to an ESP and to
       `supporters.status = 'unsubscribed'`.
 - [ ] Sponsoring entity + postal address in the footer (CAN-SPAM).
-- [ ] Commercial geocoder fallback (`lib/districts.ts` → `fallbackMatch`).
+- [ ] Commercial geocoder fallback (`lib/districts.ts` → `fallbackMatch`). The
+      Census-only ladder now tries exact → unit-stripped → one-line and
+      **verifies** each relaxed result before believing it, so a miss is a clean
+      `failed` rather than a wrong district. Addresses Census simply does not
+      hold still need a commercial geocoder or manual resolution; `/admin`
+      shows how many are waiting.
 - [ ] CSV export with `export_audit` logging (Doc 02 §5).
 - [x] QR / shareable link on the confirmation screen. `/poster` generates the
       QR from `SHARE_URL`; the confirmation screen offers the same link with a

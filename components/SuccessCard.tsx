@@ -3,12 +3,82 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { CheckIcon } from '@/components/icons'
-import { SHARE_URL } from '@/lib/site'
+import { CONTACT_EMAIL, SHARE_URL } from '@/lib/site'
 
 export interface MatchedDistricts {
   stateHouse: string | null
   stateSenate: string | null
   congressional: string | null
+}
+
+export interface Legislator {
+  name: string
+  party: string | null
+  email: string | null
+  phone: string | null
+  url: string | null
+}
+
+export interface MatchedLegislators {
+  house: Legislator | null
+  senate: Legislator | null
+}
+
+/**
+ * One seat. The member's name leads and the district number becomes the label
+ * above it — a name is what makes this feel like a real person to contact, and
+ * it is also what lets a supporter notice a bad address match.
+ *
+ * A seat can be genuinely vacant between a resignation and its special
+ * election, so the district alone has to read as a complete, unbroken result.
+ */
+function SeatCard({
+  chamberLabel,
+  district,
+  legislator,
+  tone,
+}: {
+  chamberLabel: string
+  district: string | null
+  legislator: Legislator | null
+  tone: 'accent' | 'sage'
+}) {
+  const surface = tone === 'accent' ? 'bg-accent-100' : 'bg-sage-100'
+  const kicker = tone === 'accent' ? 'text-accent-800' : 'text-sage-800'
+
+  return (
+    <div className={`rounded-md ${surface} px-[18px] py-4`}>
+      <div className={`text-[11px] font-semibold uppercase tracking-[0.08em] ${kicker}`}>
+        {chamberLabel}
+        {district ? ` · District ${district}` : ''}
+      </div>
+
+      {legislator ? (
+        <>
+          <div className="mt-1 font-heading text-2xl leading-tight">{legislator.name}</div>
+          {legislator.party ? (
+            <div className="mt-0.5 text-sm text-ink/[.7]">{legislator.party}</div>
+          ) : null}
+          {legislator.url ? (
+            <a
+              href={legislator.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1.5 inline-block text-sm text-accent-700 underline hover:text-accent"
+            >
+              Official page
+            </a>
+          ) : null}
+        </>
+      ) : district ? (
+        <div className="mt-1 font-heading text-2xl leading-tight">District {district}</div>
+      ) : (
+        <div className="mt-1 text-[15px] text-ink/[.8]">
+          We&rsquo;ll confirm this in your first email.
+        </div>
+      )}
+    </div>
+  )
 }
 
 /**
@@ -22,7 +92,13 @@ export interface MatchedDistricts {
  * Gap (CLAUDE.md): once the legislator roster lands, join the district numbers
  * to names so this can read "Your Representative is …".
  */
-export default function SuccessCard({ districts }: { districts: MatchedDistricts }) {
+export default function SuccessCard({
+  districts,
+  legislators,
+}: {
+  districts: MatchedDistricts
+  legislators?: MatchedLegislators
+}) {
   const [copied, setCopied] = useState(false)
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
@@ -66,23 +142,33 @@ export default function SuccessCard({ districts }: { districts: MatchedDistricts
           </p>
 
           <div className="grid gap-3">
-            <div className="rounded-md bg-accent-100 px-[18px] py-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-accent-800">
-                Georgia House
-              </div>
-              <div className="mt-1 font-heading text-2xl">
-                {districts.stateHouse ? `District ${districts.stateHouse}` : 'Not matched'}
-              </div>
-            </div>
-            <div className="rounded-md bg-sage-100 px-[18px] py-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-sage-800">
-                Georgia Senate
-              </div>
-              <div className="mt-1 font-heading text-2xl">
-                {districts.stateSenate ? `District ${districts.stateSenate}` : 'Not matched'}
-              </div>
-            </div>
+            <SeatCard
+              chamberLabel="Georgia House"
+              district={districts.stateHouse}
+              legislator={legislators?.house ?? null}
+              tone="accent"
+            />
+            <SeatCard
+              chamberLabel="Georgia Senate"
+              district={districts.stateSenate}
+              legislator={legislators?.senate ?? null}
+              tone="sage"
+            />
           </div>
+
+          {CONTACT_EMAIL && (legislators?.house || legislators?.senate) ? (
+            <p className="mt-s3 text-[13px] leading-[1.55] text-ink/[.7]">
+              Not who you expected? Addresses near a district line can match the
+              wrong side.{' '}
+              <a
+                href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Legislator match looks wrong')}`}
+                className="text-accent-700 underline hover:text-accent"
+              >
+                Tell us
+              </a>{' '}
+              and we&rsquo;ll correct it.
+            </p>
+          ) : null}
         </>
       ) : (
         <p className="text-[15px] leading-[1.55] text-ink/80">

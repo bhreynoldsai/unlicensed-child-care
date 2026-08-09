@@ -10,7 +10,10 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "db:migrate": "node --env-file-if-exists=.env.local scripts/migrate.mjs",
-    "districts:rematch": "node --env-file-if-exists=.env.local scripts/rematch-districts.mjs"
+    "districts:rematch": "node --env-file-if-exists=.env.local scripts/rematch-districts.mjs",
+    "legislators:import": "node --env-file-if-exists=.env.local scripts/import-legislators.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "next": "15.1.6",
@@ -29,6 +32,7 @@
     "autoprefixer": "^10.4.20",
     "postcss": "^8.5.1",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^4.1.10"
   }
 }

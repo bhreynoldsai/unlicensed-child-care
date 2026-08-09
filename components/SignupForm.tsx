@@ -4,7 +4,10 @@ import { useRef, useState } from 'react'
 
 import { ConsentCheckbox, Fieldset, SelectField, TextField } from '@/components/Field'
 import { HouseIcon } from '@/components/icons'
-import SuccessCard, { type MatchedDistricts } from '@/components/SuccessCard'
+import SuccessCard, {
+  type MatchedDistricts,
+  type MatchedLegislators,
+} from '@/components/SuccessCard'
 import { Turnstile } from '@/components/Turnstile'
 import { EMAIL_CONSENT_TEXT, SMS_CONSENT_TEXT } from '@/lib/consent'
 import { ROLES, ROLE_LABELS, collectIssues, signupSchema } from '@/lib/validation'
@@ -66,6 +69,7 @@ export default function SignupForm({ centerCode }: { centerCode: string | null }
   const [status, setStatus] = useState<Status>('idle')
   const [message, setMessage] = useState(SUBMIT_ERROR)
   const [districts, setDistricts] = useState<MatchedDistricts | null>(null)
+  const [legislators, setLegislators] = useState<MatchedLegislators | undefined>(undefined)
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const bannerRef = useRef<HTMLParagraphElement>(null)
   const formRef = useRef<HTMLFormElement>(null)
@@ -141,8 +145,12 @@ export default function SignupForm({ centerCode }: { centerCode: string | null }
         return
       }
 
-      const body = (await res.json()) as { districts: MatchedDistricts }
+      const body = (await res.json()) as {
+        districts: MatchedDistricts
+        legislators?: MatchedLegislators
+      }
       setDistricts(body.districts)
+      setLegislators(body.legislators)
       setStatus('success')
     } catch {
       // Never log PII — and the caught value may carry the request body.
@@ -153,7 +161,7 @@ export default function SignupForm({ centerCode }: { centerCode: string | null }
   }
 
   if (status === 'success' && districts) {
-    return <SuccessCard districts={districts} />
+    return <SuccessCard districts={districts} legislators={legislators} />
   }
 
   const submitting = status === 'submitting'

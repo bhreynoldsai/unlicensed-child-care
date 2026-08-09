@@ -27,6 +27,7 @@ export default async function AdminPage() {
   const session = await readSession((await cookies()).get(SESSION_COOKIE)?.value)
 
   let rows: Array<{ state_house: string | null; role: Role; supporter_count: number }> = []
+  let unmatched = { failed: 0, approximate: 0 }
   let dbError: string | null = null
 
   try {
@@ -38,6 +39,20 @@ export default async function AdminPage() {
         ORDER BY state_house`,
     )
     rows = result.rows
+
+    // Match quality is an operational number, not a curiosity: an unmatched
+    // supporter is a real person whose voice is not yet attached to a district.
+    // Counts only — this stays an aggregate surface (Doc 03 §4).
+    const quality = await pool.query<{ match_quality: string; n: number }>(
+      `SELECT match_quality, count(*)::int AS n
+         FROM district_matches
+        WHERE address_kind = 'home'
+        GROUP BY match_quality`,
+    )
+    for (const q of quality.rows) {
+      if (q.match_quality === 'failed') unmatched.failed = q.n
+      if (q.match_quality === 'approximate') unmatched.approximate = q.n
+    }
   } catch (err) {
     dbError = err instanceof Error ? err.message : 'Database unavailable'
   }
@@ -61,6 +76,29 @@ export default async function AdminPage() {
       <p className="mt-1 text-sm text-ink/[.78]">
         Aggregate counts only. Individual enrollment is never reported.
       </p>
+
+      {!dbError && (unmatched.failed > 0 || unmatched.approximate > 0) ? (
+        <div className="mt-s4 rounded-md bg-accent-100 px-[18px] py-4 text-sm leading-[1.55]">
+          {unmatched.failed > 0 ? (
+            <p>
+              <strong className="font-semibold">
+                {unmatched.failed} supporter{unmatched.failed === 1 ? '' : 's'}
+              </strong>{' '}
+              could not be matched to a district. They are signed up but counted
+              nowhere. Re-run <code>npm run districts:rematch</code> after any geocoder
+              change; addresses the Census database does not contain need a commercial
+              fallback or manual resolution.
+            </p>
+          ) : null}
+          {unmatched.approximate > 0 ? (
+            <p className={unmatched.failed > 0 ? 'mt-2' : undefined}>
+              {unmatched.approximate} matched approximately — the address was resolved
+              after normalization and verified against the submitted ZIP, house number,
+              and directional.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       {dbError ? (
         <p className="mt-6 rounded-md border-[1.5px] border-danger/40 bg-danger/[.12] px-4 py-3 text-danger">

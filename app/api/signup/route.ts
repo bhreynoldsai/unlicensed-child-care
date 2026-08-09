@@ -7,6 +7,7 @@ import {
   SMS_CONSENT_TEXT,
   consentHash,
 } from '@/lib/consent'
+import { lookupLegislators } from '@/lib/legislators'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { verifyTurnstile } from '@/lib/turnstile'
 
@@ -176,6 +177,10 @@ export async function POST(req: Request) {
     )
   }
 
+  // Name the members, not just the district numbers (Doc 02 §6). Looked up
+  // after the transaction commits: a roster miss must never cost a sign-up.
+  const legislators = await lookupLegislators(homeMatch.stateHouse, homeMatch.stateSenate)
+
   return NextResponse.json({
     ok: true,
     districts: {
@@ -183,5 +188,6 @@ export async function POST(req: Request) {
       stateSenate: homeMatch.stateSenate,
       congressional: homeMatch.congressional,
     },
+    legislators,
   })
 }

@@ -41,6 +41,8 @@ DATABASE_SSL=false
 | `npm run typecheck` | TypeScript, no emit |
 | `npm run db:migrate` | Apply `db/*.sql` in order, once each |
 | `npm run districts:rematch` | Retry failed geocodes (`-- --all` after redistricting) |
+| `npm run legislators:import` | Refresh the legislator roster from OpenStates |
+| `npm test` | Unit tests (consent rules, relaxed-match guard) |
 
 ## Routes
 
@@ -48,8 +50,11 @@ DATABASE_SSL=false
 - `/join` — the same page under the short URL printed on the poster
 - `/poster` — letter-size printable break room poster with a generated QR code
 - `/privacy`, `/unsubscribe` — placeholder pages; content pending counsel and an ESP
-- `/admin` — district density, aggregate only. **No authentication yet.**
-- `/api/signup` — POST, validates, geocodes, writes supporter + consent + match
+- `/admin` — district density, aggregate only. Gated by `middleware.ts`; returns
+  503 unless `AUTH_SECRET`, `ADMIN_PASSWORD`, and `ADMIN_ALLOWED_EMAILS` are set
+- `/admin/login` — email + shared password, HMAC-signed 8-hour session
+- `/api/signup` — POST, rate-limited and Turnstile-checked, then validates,
+  geocodes, and writes supporter + consent + match
 - `/api/health` — DB connectivity check
 
 To print the poster: open `/poster`, print at Letter, no margins, background
@@ -99,3 +104,26 @@ database.
 - [ ] `robots` flipped to `index: true` in `app/layout.tsx`.
 - [ ] Counsel review of the consent language and the employer-solicitation
       approach.
+- [ ] `npm run legislators:import` run against the production database, and
+      re-run after every general and special election.
+- [ ] `NEXT_PUBLIC_CONTACT_EMAIL` set — without it the confirmation screen
+      cannot offer a way to report a wrong legislator match, which is the only
+      way a bad address match gets caught.
+
+## District matching
+
+Addresses resolve through the U.S. Census geocoder in three steps: exactly as
+typed, then with the unit designator stripped, then as a one-line address. Only
+the first is trusted outright. A relaxed result is accepted **only if** the
+address that came back still agrees with what was typed on house number, ZIP,
+and street directional.
+
+That guard exists because relaxing a query does not fail cleanly — it returns a
+different address. Asking for `1500 N Patterson St, 31698` without the ZIP
+returns `1500 S PATTERSON ST, 31601`: a different street, in different House,
+Senate, and congressional districts. Filing a supporter under the wrong
+legislator is worse than filing them under none, because nobody detects it.
+
+Anything that cannot be verified is recorded as `failed`, the sign-up still
+succeeds, and `/admin` reports how many are waiting. Those need either a
+commercial geocoder behind `GEOCODER_FALLBACK_KEY` or manual resolution.

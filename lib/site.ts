@@ -12,3 +12,11 @@ export const SITE_URL = RAW_URL.replace(/\/+$/, '')
 export const SHARE_URL = `${SITE_URL}/join`
 
 export const SITE_NAME = 'Georgia Licensed Child Care Network'
+
+/**
+ * Where a supporter reports a wrong legislator match. This is the feedback loop
+ * that catches bad geocodes — the person reading the name is the only one who
+ * knows it is wrong. Until it is set, the confirmation screen makes no promise
+ * it cannot keep.
+ */
+export const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? null
