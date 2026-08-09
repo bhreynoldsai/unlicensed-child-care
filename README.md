@@ -43,6 +43,7 @@ DATABASE_SSL=false
 | `npm run districts:rematch` | Retry failed geocodes (`-- --all` after redistricting) |
 | `npm run legislators:import` | Refresh the legislator roster from OpenStates |
 | `npm test` | Unit tests (consent rules, relaxed-match guard) |
+| `npm run preflight` | Launch readiness check — run before sharing the URL |
 
 ## Routes
 
@@ -94,13 +95,20 @@ database.
 
 ### Launch checklist
 
+Run `npm run preflight` against the production environment. It exits non-zero
+while any blocker remains, and it catches the failures that are otherwise
+invisible — a missing Turnstile key leaves the form working but unprotected.
+
 - [ ] `AUTH_SECRET`, `ADMIN_PASSWORD`, `ADMIN_ALLOWED_EMAILS` set. `/admin`
       returns 503 without them, so verify it loads before announcing anything.
 - [ ] `TURNSTILE_SECRET_KEY` and `NEXT_PUBLIC_TURNSTILE_SITE_KEY` set.
       **Bot verification is skipped entirely when the secret is absent.**
 - [ ] `NEXT_PUBLIC_SITE_URL` set before printing posters — the QR encodes it.
 - [ ] CAN-SPAM footer: sponsoring entity and physical postal address.
-- [ ] Privacy notice content, and an unsubscribe that actually unsubscribes.
+- [ ] Privacy notice reviewed and signed off by counsel. A draft describing
+      the system's actual data handling is live at `/privacy`; two questions in
+      the file header need a lawyer, not a developer.
+- [ ] An unsubscribe that actually unsubscribes.
 - [ ] `robots` flipped to `index: true` in `app/layout.tsx`.
 - [ ] Counsel review of the consent language and the employer-solicitation
       approach.

@@ -3,6 +3,11 @@ import { Caprasimo, Figtree } from 'next/font/google'
 
 import { PeopleIcon } from '@/components/icons'
 import { SITE_NAME } from '@/lib/site'
+import {
+  SPONSOR_DISCLAIMER,
+  SPONSOR_NAME,
+  SPONSOR_POSTAL_ADDRESS,
+} from '@/lib/sponsor'
 import './globals.css'
 
 const caprasimo = Caprasimo({
@@ -52,13 +57,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <footer className="border-t border-ink/[.16] px-5 py-s6 text-[13px] leading-[1.6] text-ink/[.65] sm:px-8">
             <div className="mx-auto grid max-w-[640px] gap-1.5">
               {/* CAN-SPAM: real sender identity + physical postal address.
-                  Fill these in once the sponsoring entity is confirmed. */}
-              <p className="font-semibold text-ink/[.85]">{SITE_NAME}</p>
-              <p>[Street address] &middot; [City], GA [ZIP]</p>
+                  Both come from lib/sponsor.ts; `npm run preflight` fails when
+                  the address is unset, so this cannot ship half-filled. */}
+              <p className="font-semibold text-ink/[.85]">{SPONSOR_NAME}</p>
               <p>
-                Paid for by [SPONSORING ENTITY &mdash; TO BE CONFIRMED]. Not authorized by
-                any candidate or candidate committee.
+                {SPONSOR_POSTAL_ADDRESS ?? (
+                  <span className="text-danger">
+                    [Postal address required before launch &mdash; set
+                    NEXT_PUBLIC_SPONSOR_POSTAL_ADDRESS]
+                  </span>
+                )}
               </p>
+              <p>{SPONSOR_DISCLAIMER}</p>
               <p>
                 <a className="text-accent-700 underline hover:text-accent" href="/privacy">
                   Privacy notice

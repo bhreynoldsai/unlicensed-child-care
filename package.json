@@ -13,7 +13,8 @@
     "districts:rematch": "node --env-file-if-exists=.env.local scripts/rematch-districts.mjs",
     "legislators:import": "node --env-file-if-exists=.env.local scripts/import-legislators.mjs",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "preflight": "node --env-file-if-exists=.env.local scripts/preflight.mjs"
   },
   "dependencies": {
     "next": "15.1.6",
