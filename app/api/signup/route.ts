@@ -1,0 +1,151 @@
+import { NextResponse } from 'next/server'
+import { signupSchema } from '@/lib/validation'
+import { withTransaction } from '@/lib/db'
+import { matchAddress, FAILED_MATCH } from '@/lib/districts'
+import {
+  EMAIL_CONSENT_TEXT,
+  SMS_CONSENT_TEXT,
+  consentHash,
+} from '@/lib/consent'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
+function clientIp(req: Request): string | null {
+  const fwd = req.headers.get('x-forwarded-for')
+  if (fwd) return fwd.split(',')[0]!.trim()
+  return req.headers.get('x-real-ip')
+}
+
+export async function POST(req: Request) {
+  let json: unknown
+  try {
+    json = await req.json()
+  } catch {
+    return NextResponse.json({ message: 'Invalid request body.' }, { status: 400 })
+  }
+
+  const parsed = signupSchema.safeParse(json)
+  if (!parsed.success) {
+    const errors: Record<string, string> = {}
+    for (const issue of parsed.error.issues) {
+      const key = issue.path.join('.') || '_form'
+      if (!errors[key]) errors[key] = issue.message
+    }
+    return NextResponse.json({ errors }, { status: 422 })
+  }
+
+  const d = parsed.data
+  const ip = clientIp(req)
+  const userAgent = req.headers.get('user-agent')
+
+  // Geocode both addresses (Doc 02 §4). Never block sign-up on a geocoder
+  // failure — a failed match is recorded and picked up by the re-match batch.
+  const [homeMatch, employerMatch] = await Promise.all([
+    matchAddress({ street: d.homeStreet, city: d.homeCity, state: d.homeState, zip: d.homeZip }).catch(
+      () => FAILED_MATCH,
+    ),
+    matchAddress({
+      street: d.employerStreet,
+      city: d.employerCity,
+      state: d.employerState,
+      zip: d.employerZip,
+    }).catch(() => FAILED_MATCH),
+  ])
+
+  try {
+    await withTransaction(async (client) => {
+      const { rows } = await client.query<{ id: string }>(
+        `INSERT INTO supporters (
+           first_name, last_name, email, cell_phone, other_phone,
+           home_street, home_street2, home_city, home_state, home_zip,
+           employer_name, employer_street, employer_city, employer_state, employer_zip,
+           role, role_other, source_center_code
+         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+         ON CONFLICT (lower(email)) DO UPDATE SET
+           first_name = EXCLUDED.first_name,
+           last_name  = EXCLUDED.last_name,
+           cell_phone = EXCLUDED.cell_phone,
+           other_phone = EXCLUDED.other_phone,
+           home_street = EXCLUDED.home_street,
+           home_street2 = EXCLUDED.home_street2,
+           home_city = EXCLUDED.home_city,
+           home_state = EXCLUDED.home_state,
+           home_zip = EXCLUDED.home_zip,
+           employer_name = EXCLUDED.employer_name,
+           employer_street = EXCLUDED.employer_street,
+           employer_city = EXCLUDED.employer_city,
+           employer_state = EXCLUDED.employer_state,
+           employer_zip = EXCLUDED.employer_zip,
+           role = EXCLUDED.role,
+           role_other = EXCLUDED.role_other,
+           status = 'active',
+           updated_at = now()
+         RETURNING id`,
+        [
+          d.firstName, d.lastName, d.email, d.cellPhone, d.otherPhone,
+          d.homeStreet, d.homeStreet2 ?? null, d.homeCity, d.homeState, d.homeZip,
+          d.employerName, d.employerStreet, d.employerCity, d.employerState, d.employerZip,
+          d.role, d.roleOther ?? null, d.sourceCenterCode ?? null,
+        ],
+      )
+
+      const supporterId = rows[0]!.id
+
+      // Consent is append-only. One row per channel per submission, with the
+      // verbatim language and its hash. This is the TCPA evidence record.
+      const consents: Array<[string, boolean, string]> = [
+        ['email', true, EMAIL_CONSENT_TEXT],
+        ['sms', d.smsConsent, SMS_CONSENT_TEXT],
+      ]
+      for (const [channel, granted, text] of consents) {
+        await client.query(
+          `INSERT INTO consent_events
+             (supporter_id, channel, granted, language_hash, language_text, source, ip_address, user_agent)
+           VALUES ($1,$2,$3,$4,$5,'signup_form',$6,$7)`,
+          [supporterId, channel, granted, consentHash(text), text, ip, userAgent],
+        )
+      }
+
+      for (const [kind, m] of [['home', homeMatch], ['employer', employerMatch]] as const) {
+        await client.query(
+          `INSERT INTO district_matches
+             (supporter_id, address_kind, latitude, longitude, geocoder, match_quality,
+              state_house, state_senate, congressional, county, boundary_vintage)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+           ON CONFLICT (supporter_id, address_kind) DO UPDATE SET
+             latitude = EXCLUDED.latitude,
+             longitude = EXCLUDED.longitude,
+             geocoder = EXCLUDED.geocoder,
+             match_quality = EXCLUDED.match_quality,
+             state_house = EXCLUDED.state_house,
+             state_senate = EXCLUDED.state_senate,
+             congressional = EXCLUDED.congressional,
+             county = EXCLUDED.county,
+             boundary_vintage = EXCLUDED.boundary_vintage,
+             matched_at = now()`,
+          [
+            supporterId, kind, m.latitude, m.longitude, m.geocoder, m.matchQuality,
+            m.stateHouse, m.stateSenate, m.congressional, m.county, m.boundaryVintage,
+          ],
+        )
+      }
+    })
+  } catch (err) {
+    // Never log PII. Log the shape of the failure only.
+    console.error('signup_failed', err instanceof Error ? err.message : 'unknown')
+    return NextResponse.json(
+      { message: 'We could not complete your sign-up. Please try again in a moment.' },
+      { status: 500 },
+    )
+  }
+
+  return NextResponse.json({
+    ok: true,
+    districts: {
+      stateHouse: homeMatch.stateHouse,
+      stateSenate: homeMatch.stateSenate,
+      congressional: homeMatch.congressional,
+    },
+  })
+}
