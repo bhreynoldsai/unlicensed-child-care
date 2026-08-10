@@ -72,7 +72,15 @@ export default async function AdminPage() {
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
       <AdminBar email={session?.email ?? null} />
 
-      <h1 className="text-[28px] leading-[1.15]">District density</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-heading text-[28px] font-bold leading-[1.15]">District density</h1>
+        <a
+          href="/admin/supporters"
+          className="text-sm text-navy-700 underline hover:text-navy-900"
+        >
+          Supporter list &amp; export →
+        </a>
+      </div>
       <p className="mt-1 text-sm text-navy-500">
         Aggregate counts only. Individual enrollment is never reported.
       </p>
