@@ -23,3 +23,6 @@ next-env.d.ts
 
 # generated review exports
 docs/exports/*.docx
+
+# generated during the database split
+.env.newdb.local
