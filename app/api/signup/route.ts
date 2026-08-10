@@ -12,6 +12,7 @@ import { lookupLegislators } from '@/lib/legislators'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { SITE_URL } from '@/lib/site'
 import { verifyTurnstile } from '@/lib/turnstile'
+import { FORM_VERSION, PRIVACY_NOTICE_VERSION } from '@/lib/versions'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -150,9 +151,13 @@ export async function POST(req: Request) {
       for (const [channel, granted, text] of consents) {
         await client.query(
           `INSERT INTO consent_events
-             (supporter_id, channel, granted, language_hash, language_text, source, ip_address, user_agent)
-           VALUES ($1,$2,$3,$4,$5,'signup_form',$6,$7)`,
-          [supporterId, channel, granted, consentHash(text), text, ip, userAgent],
+             (supporter_id, channel, granted, language_hash, language_text, source,
+              ip_address, user_agent, form_version, page_url, notice_version)
+           VALUES ($1,$2,$3,$4,$5,'signup_form',$6,$7,$8,$9,$10)`,
+          [
+            supporterId, channel, granted, consentHash(text), text, ip, userAgent,
+            FORM_VERSION, d.pageUrl ?? null, PRIVACY_NOTICE_VERSION,
+          ],
         )
       }
 

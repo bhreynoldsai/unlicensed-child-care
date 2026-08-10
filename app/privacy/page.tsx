@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 
 import { CONTACT_EMAIL } from '@/lib/site'
+import { PRIVACY_NOTICE_VERSION } from '@/lib/versions'
 import { SPONSOR_NAME, SPONSOR_POSTAL_ADDRESS } from '@/lib/sponsor'
 
 export const metadata: Metadata = { title: 'Privacy notice' }
@@ -43,13 +44,7 @@ export const metadata: Metadata = { title: 'Privacy notice' }
 
 const UPDATED = 'August 10, 2026'
 
-/**
- * §6.6: the notice needs a version identifier for the same reason consent
- * strings are hashed — the campaign must be able to show what a visitor saw on
- * a given date. Bump this whenever the substance changes, and keep prior
- * versions reachable.
- */
-const NOTICE_VERSION = '2026.08.10-2'
+
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -65,7 +60,7 @@ export default function Privacy() {
     <div className="mx-auto max-w-frame px-4 pb-16 pt-8 sm:px-6">
       <h1 className="mb-3 text-[clamp(28px,6vw,36px)] leading-[1.15]">Privacy notice</h1>
       <p className="text-sm text-navy-500">
-        Last updated {UPDATED} &middot; Version {NOTICE_VERSION}
+        Last updated {UPDATED} &middot; Version {PRIVACY_NOTICE_VERSION}
       </p>
 
       <p className="mt-6 text-base leading-[1.65]">

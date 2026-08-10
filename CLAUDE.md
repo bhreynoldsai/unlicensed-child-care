@@ -36,7 +36,12 @@ These are not style preferences. Violating one is a program risk, not a bug.
    awaiting counsel sign-off** (`docs/05-consent-and-privacy-language-review.md`);
    once reviewed, change them once and update that document's status.
 3. **Consent records are append-only.** Never `UPDATE` a row in
-   `consent_events`; write a new one.
+   `consent_events`; write a new one. Quarantine works the same way — a block
+   is recorded in `consent_quarantine` alongside the records, never by editing
+   them. **Sending code reads the `consent_current` view, never
+   `consent_events` directly**: `granted = true AND quarantined = false` is the
+   only sendable state, and reading the raw table silently bypasses an active
+   block.
 4. **Participation is voluntary and every material says so.**
    `VOLUNTARY_PARTICIPATION_NOTICE` appears on the sign-up page and on all
    distribution materials.
@@ -104,7 +109,10 @@ lib/unsubscribe.ts      signed opt-out tokens
 lib/legislators.ts      district → sitting member
 lib/rate-limit.ts       Postgres-backed limiter
 lib/turnstile.ts        bot verification
-db/001_init.sql         schema, density view
+db/                     001 schema + density view, 002 rate limits,
+                        003 legislators, 004/005 consent metadata + quarantine
+lib/suppression.ts      small-cell suppression for anything leaving the campaign
+lib/versions.ts         form and privacy-notice versions stamped onto consent
 scripts/                migrate, rematch-districts
 docs/                   the four governing plans
 ```
@@ -158,13 +166,13 @@ receives and how their voice is framed to a legislator.
       privacy notice **no longer promises it** — describing an unbuilt process
       was the misrepresentation risk. Restore the specific commitment when the
       job ships, not before.
-- [ ] Quarantine SMS consents collected under the interim text, pending the
-      sender-of-record answer: CTIA §5.1.2.2 makes consent non-transferable, so
-      if the registered A2P brand is a different entity those consents cannot be
-      used (docs/05 §2.4).
-- [ ] Consent record metadata: `form_version`, page URL with center code, and
-      the privacy-notice version in force (docs/05 §8.2). Timestamp, IP, user
-      agent and per-channel storage are already there.
+- [x] SMS consent is quarantined pending the sender-of-record answer
+      (docs/05 §2.4). `consent_quarantine` holds an unreleased block; release it
+      only once the registered A2P brand is known to match the entity named at
+      opt-in, and consider re-confirmation at that point.
+- [x] Consent record metadata (docs/05 §8.2): `form_version`, page URL with the
+      center code, and the privacy-notice version in force. Bump the constants
+      in `lib/versions.ts` when the form or the notice changes materially.
 - [x] CSV export with `export_audit` logging (Doc 02 §5), plus a supporter list
       at `/admin/supporters`.
 - [ ] Confirm the hero photo's licensing, or replace it. It arrived with the

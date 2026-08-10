@@ -122,6 +122,8 @@ export default function SignupForm({ centerCode }: { centerCode: string | null }
       otherPhone: fields.otherPhone || undefined,
       roleOther: fields.roleOther || null,
       sourceCenterCode: centerCode,
+      // Recorded with the consent, so a record ties to the page actually seen.
+      pageUrl: typeof window === 'undefined' ? null : window.location.href.slice(0, 500),
       turnstileToken,
     }
 

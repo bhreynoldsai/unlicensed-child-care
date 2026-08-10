@@ -66,6 +66,12 @@ export const signupSchema = z
 
     sourceCenterCode: z.string().trim().max(64).optional().nullable(),
 
+    // Evidence metadata (docs/05 §8.2). The page the consent was given on,
+    // including any ?c= attribution parameter. Supplied by the client because
+    // only the client knows the URL the person actually saw; treated as
+    // untrusted and length-capped, and never used for anything but the record.
+    pageUrl: z.string().trim().max(500).optional().nullable(),
+
     // Doc 03 §2: sign-up must succeed with email consent alone.
     // SMS is additive and separately captured — never bundle them.
     emailConsent: z.literal(true, {
