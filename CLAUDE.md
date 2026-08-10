@@ -27,9 +27,11 @@ These are not style preferences. Violating one is a program risk, not a bug.
 1. **SMS consent is a separate, unticked checkbox** carrying the exact TCPA
    express-consent language in `lib/consent.ts`. Sign-up must succeed with
    **email consent alone**. Never pre-check, bundle, or gate on SMS consent.
-2. **Consent language is verbatim and counsel-reviewed.** The strings in
-   `lib/consent.ts` are hashed and stored with every consent record as legal
-   evidence. Do not reword them — not for tone, not for length.
+2. **Consent language is verbatim and hashed as legal evidence.** The strings in
+   `lib/consent.ts` are stored with every consent record. Do not reword them —
+   not for tone, not for length. **They are currently a build-team draft
+   awaiting counsel sign-off** (`docs/05-consent-and-privacy-language-review.md`);
+   once reviewed, change them once and update that document's status.
 3. **Consent records are append-only.** Never `UPDATE` a row in
    `consent_events`; write a new one.
 4. **Participation is voluntary and every material says so.**

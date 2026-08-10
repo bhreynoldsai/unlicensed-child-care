@@ -1,22 +1,53 @@
 import { createHash } from 'crypto'
 
 /**
- * VERBATIM consent language from docs/03-data-privacy-and-compliance-plan.md §2.
+ * Consent language.
  *
- * DO NOT EDIT these strings without counsel review. They are hashed and stored
- * with every consent record so we can prove exactly what a supporter was shown.
- * Changing a string changes its hash, which is correct — old records keep the
- * old hash and text.
+ * ⚠️ PLACEHOLDER PENDING COUNSEL REVIEW (2026-08-09).
+ *
+ * These strings were drafted by the build team against TCPA and CAN-SPAM
+ * requirements and are NOT yet lawyer-reviewed. The reasoning for every clause,
+ * and the open questions, are in docs/05-consent-and-privacy-language-review.md.
+ * Send that document to counsel; replace this notice with the review date once
+ * it comes back.
+ *
+ * They are hashed and stored with every consent record so we can prove exactly
+ * what a supporter was shown. Changing a string changes its hash, which is
+ * correct — old records keep the old hash and text, because that is what those
+ * people actually saw. Change them once, after review, not iteratively.
+ *
+ * Do not edit for tone or length. Every clause is load-bearing; see the review
+ * packet for which requirement each one serves.
+ */
+
+/**
+ * CAN-SPAM is an opt-out regime, so prior consent is not legally required for
+ * commercial email. We use opt-in anyway: it is stricter than the law and it is
+ * what Gmail and Yahoo's bulk-sender rules effectively require.
  */
 export const EMAIL_CONSENT_TEXT =
-  'I agree to receive email updates and action alerts about child care policy in Georgia. I can unsubscribe at any time.'
+  'I agree to receive email updates and action alerts about child care policy in Georgia from the Georgia Licensed Child Care Network. I can unsubscribe at any time using the link in any message. See our Privacy notice.'
 
+/**
+ * Written to the stricter standard — TCPA prior express *written* consent —
+ * even though non-commercial advocacy messaging arguably faces a lower bar.
+ * The line between issue advocacy and marketing is not always clean, and
+ * carriers apply the strict standard during A2P 10DLC campaign vetting
+ * regardless.
+ *
+ * Named sender, disclosed automation, "not a condition", frequency, rates,
+ * STOP/HELP, and carrier disclaimer are each there for a reason. The
+ * "or of my employment" clause is the employer-context mitigation: this program
+ * is distributed through employers, which is its distinctive exposure.
+ */
 export const SMS_CONSENT_TEXT =
-  'I agree to receive recurring text message alerts (including autodialed messages) about child care policy at the mobile number I provided. Consent is not a condition of participation. Message and data rates may apply. Reply STOP to cancel, HELP for help.'
+  'I agree that the Georgia Licensed Child Care Network may send me recurring text message alerts about child care policy in Georgia, including messages sent using automated technology, at the mobile number I provided. Consent is not a condition of participation or of my employment. Message frequency varies. Message and data rates may apply. Reply STOP to cancel or HELP for help. Carriers are not liable for delayed or undelivered messages. See our Privacy notice.'
 
 /**
  * Required on every distribution material and on the sign-up page itself.
- * docs/03 §4 — employer-context guardrails.
+ * docs/03-data-privacy-and-compliance-plan.md §4 — employer-context guardrails.
+ * Do not soften, shorten, or move into a footnote: it is the primary mitigation
+ * for recruiting employees through their employers.
  */
 export const VOLUNTARY_PARTICIPATION_NOTICE =
   'Participation is completely voluntary and has no effect on your employment.'
