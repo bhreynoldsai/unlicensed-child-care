@@ -109,10 +109,14 @@ receives and how their voice is framed to a legislator.
 - [x] Legislator roster: the confirmation screen names the member, party, and
       official page. Refresh with `npm run legislators:import` after every
       general and special election — stale rows would name a former member.
-- [ ] Unsubscribe and privacy-notice **content**. The pages exist and the footer
-      links resolve, but both are placeholders: `/privacy` needs counsel text
-      against Doc 03, and `/unsubscribe` needs wiring to an ESP and to
-      `supporters.status = 'unsubscribed'`.
+- [x] Unsubscribe works end to end. A signed token in every email resolves to
+      one supporter, sets `status = 'unsubscribed'`, and APPENDS a
+      `consent_events` row with `granted = false` — the original grant is never
+      edited (Doc 03 §2). Supports Gmail/Yahoo one-click via List-Unsubscribe.
+- [ ] Privacy-notice content still needs counsel sign-off against Doc 03.
+- [ ] Set EMAIL_API_KEY + EMAIL_FROM_ADDRESS. Until both exist no confirmation
+      email is sent, so no unsubscribe link exists to click — that is the
+      CAN-SPAM gap, not the page.
 - [ ] Sponsoring entity + postal address in the footer (CAN-SPAM).
 - [ ] Commercial geocoder fallback (`lib/districts.ts` → `fallbackMatch`). The
       Census-only ladder now tries exact → unit-stripped → one-line and

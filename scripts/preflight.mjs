@@ -73,9 +73,9 @@ advised(
 )
 
 advised(
-  Boolean(process.env.EMAIL_API_KEY?.trim()),
+  Boolean(process.env.EMAIL_API_KEY?.trim()) && Boolean(process.env.EMAIL_FROM_ADDRESS?.trim()),
   'Email provider configured',
-  'Email consent is being collected but nothing can send, and unsubscribe cannot work.',
+  'Needs EMAIL_API_KEY and EMAIL_FROM_ADDRESS. Without both, no confirmation email\n       is sent and the unsubscribe link in it never exists — the CAN-SPAM gap.',
 )
 
 advised(

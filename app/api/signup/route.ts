@@ -7,8 +7,10 @@ import {
   SMS_CONSENT_TEXT,
   consentHash,
 } from '@/lib/consent'
+import { sendConfirmation } from '@/lib/email'
 import { lookupLegislators } from '@/lib/legislators'
 import { checkRateLimit } from '@/lib/rate-limit'
+import { SITE_URL } from '@/lib/site'
 import { verifyTurnstile } from '@/lib/turnstile'
 
 export const runtime = 'nodejs'
@@ -90,8 +92,10 @@ export async function POST(req: Request) {
     }).catch(() => FAILED_MATCH),
   ])
 
+  let supporterId: string | null = null
+
   try {
-    await withTransaction(async (client) => {
+    supporterId = await withTransaction(async (client) => {
       const { rows } = await client.query<{ id: string }>(
         `INSERT INTO supporters (
            first_name, last_name, email, cell_phone, other_phone,
@@ -167,6 +171,9 @@ export async function POST(req: Request) {
           ],
         )
       }
+
+      // Returned so the confirmation email can address them after commit.
+      return supporterId
     })
   } catch (err) {
     // Never log PII. Log the shape of the failure only.
@@ -180,6 +187,24 @@ export async function POST(req: Request) {
   // Name the members, not just the district numbers (Doc 02 §6). Looked up
   // after the transaction commits: a roster miss must never cost a sign-up.
   const legislators = await lookupLegislators(homeMatch.stateHouse, homeMatch.stateSenate)
+
+  // Confirmation email, best effort. The supporter is already committed, so a
+  // mail failure must not turn a successful sign-up into an error — it is
+  // logged and the confirmation screen still shows them everything.
+  if (supporterId) {
+    try {
+      await sendConfirmation({
+        supporterId,
+        firstName: d.firstName,
+        email: d.email,
+        siteUrl: SITE_URL,
+        house: { district: homeMatch.stateHouse, name: legislators.house?.name ?? null },
+        senate: { district: homeMatch.stateSenate, name: legislators.senate?.name ?? null },
+      })
+    } catch (err) {
+      console.error('confirmation_email_failed', err instanceof Error ? err.message : 'unknown')
+    }
+  }
 
   return NextResponse.json({
     ok: true,
