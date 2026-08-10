@@ -109,6 +109,46 @@ html:has(.poster-sheet) {
   color: #0F2340;
 }
 
+/* Screen-only controls above the sheet. */
+.poster-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  max-width: 8.5in;
+  margin: 0 auto 16px;
+  padding: 14px 18px;
+  border: 1px solid #E3E9F2;
+  border-left: 4px solid #C9A227;
+  border-radius: 8px;
+  background: #fff;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  color: #0F2340;
+}
+
+.poster-tools a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 8px;
+  background: #0F2340;
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.poster-tools a:hover {
+  background: #1E3A5F;
+}
+
+.poster-tools-note {
+  flex-basis: 100%;
+  color: #3F5F8A;
+  font-size: 13px;
+}
+
 @media screen and (max-width: 9in) {
   .poster-sheet {
     padding: 0;
@@ -121,6 +161,11 @@ html:has(.poster-sheet) {
 }
 
 @media print {
+  /* The download strip is a screen affordance; paper must not carry it. */
+  .poster-tools {
+    display: none;
+  }
+
   .poster-sheet {
     display: block;
     min-height: 0;

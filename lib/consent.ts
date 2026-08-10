@@ -5,6 +5,10 @@ import { createHash } from 'crypto'
  *
  * ⚠️ PLACEHOLDER PENDING COUNSEL REVIEW (2026-08-09).
  *
+ * Email is the only channel. SMS was removed on 2026-08-10 — the programme is
+ * not being run. Consent rows already collected on the `sms` channel remain in
+ * `consent_events` (append-only) and stay quarantined; nothing reads them.
+ *
  * These strings were drafted by the build team against TCPA and CAN-SPAM
  * requirements and are NOT yet lawyer-reviewed. The reasoning for every clause,
  * and the open questions, are in docs/05-consent-and-privacy-language-review.md.
@@ -29,21 +33,6 @@ export const EMAIL_CONSENT_TEXT =
   'I agree to receive email updates and action alerts about child care policy in Georgia from the Georgia Licensed Child Care Network. I can unsubscribe at any time using the link in any message. See our Privacy notice.'
 
 /**
- * Written to the stricter standard — TCPA prior express *written* consent —
- * even though non-commercial advocacy messaging arguably faces a lower bar.
- * The line between issue advocacy and marketing is not always clean, and
- * carriers apply the strict standard during A2P 10DLC campaign vetting
- * regardless.
- *
- * Named sender, disclosed automation, "not a condition", frequency, rates,
- * STOP/HELP, and carrier disclaimer are each there for a reason. The
- * "or of my employment" clause is the employer-context mitigation: this program
- * is distributed through employers, which is its distinctive exposure.
- */
-export const SMS_CONSENT_TEXT =
-  'I agree that the Georgia Licensed Child Care Network may send me recurring text message alerts about child care policy in Georgia, including messages sent using automated technology, at the mobile number I provided. Consent is not a condition of participation or of my employment. Message frequency varies. Message and data rates may apply. Reply STOP to cancel or HELP for help. Carriers are not liable for delayed or undelivered messages. See our Privacy notice.'
-
-/**
  * Required on every distribution material and on the sign-up page itself.
  * docs/03-data-privacy-and-compliance-plan.md §4 — employer-context guardrails.
  * Do not soften, shorten, or move into a footnote: it is the primary mitigation
@@ -58,5 +47,4 @@ export function consentHash(text: string): string {
 
 export const CONSENT_VERSION = {
   email: consentHash(EMAIL_CONSENT_TEXT),
-  sms: consentHash(SMS_CONSENT_TEXT),
 } as const

@@ -2,11 +2,7 @@ import { NextResponse, after } from 'next/server'
 import { signupSchema } from '@/lib/validation'
 import { withTransaction } from '@/lib/db'
 import { matchAddress, FAILED_MATCH } from '@/lib/districts'
-import {
-  EMAIL_CONSENT_TEXT,
-  SMS_CONSENT_TEXT,
-  consentHash,
-} from '@/lib/consent'
+import { EMAIL_CONSENT_TEXT, consentHash } from '@/lib/consent'
 import { sendConfirmation } from '@/lib/email'
 import { lookupLegislators } from '@/lib/legislators'
 import { checkRateLimit } from '@/lib/rate-limit'
@@ -142,20 +138,19 @@ export async function POST(req: Request) {
 
       const supporterId = rows[0]!.id
 
-      // Consent is append-only. One row per channel per submission, with the
-      // verbatim language and its hash. This is the TCPA evidence record.
-      const consents: Array<[string, boolean, string]> = [
-        ['email', true, EMAIL_CONSENT_TEXT],
-        ['sms', d.smsConsent, SMS_CONSENT_TEXT],
-      ]
-      for (const [channel, granted, text] of consents) {
+      // Consent is append-only: one row per submission carrying the verbatim
+      // language and its hash. Email is the only channel — SMS was removed
+      // 2026-08-10, and no `sms` row is written rather than a misleading
+      // granted=false for a channel nobody was offered.
+      {
+        const text = EMAIL_CONSENT_TEXT
         await client.query(
           `INSERT INTO consent_events
              (supporter_id, channel, granted, language_hash, language_text, source,
               ip_address, user_agent, form_version, page_url, notice_version)
            VALUES ($1,$2,$3,$4,$5,'signup_form',$6,$7,$8,$9,$10)`,
           [
-            supporterId, channel, granted, consentHash(text), text, ip, userAgent,
+            supporterId, 'email', true, consentHash(text), text, ip, userAgent,
             FORM_VERSION, d.pageUrl ?? null, PRIVACY_NOTICE_VERSION,
           ],
         )

@@ -58,6 +58,9 @@ DATABASE_SSL=false
 - `/api/signup` — POST, rate-limited and Turnstile-checked, then validates,
   geocodes, and writes supporter + consent + match
 - `/api/health` — DB connectivity check
+- `/api/qr` — downloadable QR for the sign-up link. `?format=svg` for vector,
+  `?size=2048` for a larger PNG. Generated from the same `SHARE_URL` as the
+  poster, so a code on a flyer can never point somewhere else.
 
 To print the poster: open `/poster`, print at Letter, no margins, background
 graphics on. The QR encodes `NEXT_PUBLIC_SITE_URL` + `/join`, so set that

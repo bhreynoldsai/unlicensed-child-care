@@ -9,7 +9,7 @@ import SuccessCard, {
   type MatchedLegislators,
 } from '@/components/SuccessCard'
 import { Turnstile } from '@/components/Turnstile'
-import { EMAIL_CONSENT_TEXT, SMS_CONSENT_TEXT } from '@/lib/consent'
+import { EMAIL_CONSENT_TEXT } from '@/lib/consent'
 import { ROLES, ROLE_LABELS, collectIssues, signupSchema } from '@/lib/validation'
 
 type Status = 'idle' | 'submitting' | 'error' | 'success'
@@ -33,7 +33,6 @@ type FormState = {
   role: string
   roleOther: string
   emailConsent: boolean
-  smsConsent: boolean
 }
 
 const EMPTY: FormState = {
@@ -55,27 +54,9 @@ const EMPTY: FormState = {
   role: '',
   roleOther: '',
   emailConsent: false,
-  smsConsent: false,
 }
 
 const ROLE_OPTIONS = ROLES.map((value) => ({ value, label: ROLE_LABELS[value] }))
-
-/**
- * SMS is paused, not abandoned. The consent box is hidden until a Twilio A2P
- * 10DLC campaign is registered and Advanced Opt-Out is live, because until then
- * the text promises "Reply STOP to cancel" and nothing can honour it.
- *
- * Hidden by default deliberately: consent you cannot act on should require a
- * deliberate act to start collecting, not a deliberate act to stop. Set
- * NEXT_PUBLIC_SHOW_SMS_CONSENT=true once the carrier campaign is approved.
- *
- * Everything behind it stays in place — the schema, the consent language, the
- * sms channel in consent_events. A supporter who signs up while this is hidden
- * still gets an sms consent row recorded with granted=false, which is the
- * truthful record: they were never asked.
- */
-const SHOW_SMS_CONSENT =
-  String(process.env.NEXT_PUBLIC_SHOW_SMS_CONSENT ?? '').trim().toLowerCase() === 'true'
 
 const SUBMIT_ERROR =
   'We could not reach the server. Please check your connection and try again.'
@@ -410,23 +391,6 @@ export default function SignupForm({ centerCode }: { centerCode: string | null }
             {EMAIL_CONSENT_TEXT}
           </ConsentCheckbox>
 
-          {SHOW_SMS_CONSENT ? (
-            <>
-              <div className="mt-3">
-                <ConsentCheckbox
-                  id="smsConsent"
-                  checked={fields.smsConsent}
-                  onChange={(v) => set('smsConsent', v)}
-                >
-                  {SMS_CONSENT_TEXT}
-                </ConsentCheckbox>
-              </div>
-
-              <p className="mt-3 text-sm text-navy-500">
-                Text alerts are optional &mdash; you can sign up with email only.
-              </p>
-            </>
-          ) : null}
         </Fieldset>
 
         <div>

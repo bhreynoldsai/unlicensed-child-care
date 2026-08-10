@@ -72,12 +72,10 @@ export const signupSchema = z
     // untrusted and length-capped, and never used for anything but the record.
     pageUrl: z.string().trim().max(500).optional().nullable(),
 
-    // Doc 03 §2: sign-up must succeed with email consent alone.
-    // SMS is additive and separately captured — never bundle them.
+    // Email is the only contact channel. Consent is required to sign up.
     emailConsent: z.literal(true, {
       errorMap: () => ({ message: 'Email consent is required to sign up' }),
     }),
-    smsConsent: z.boolean().default(false),
   })
   .refine((d) => d.role !== 'other' || !!d.roleOther, {
     message: 'Tell us your role',

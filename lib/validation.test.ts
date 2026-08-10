@@ -3,10 +3,10 @@ import { describe, expect, it } from 'vitest'
 import { collectIssues, signupSchema, toE164 } from '@/lib/validation'
 
 /**
- * The consent rules here are compliance requirements (Doc 03 §2), not product
- * preferences. A regression that let a sign-up through without email consent,
- * or that made SMS consent load-bearing, would be a legal problem rather than
- * a bug — so they get tests.
+ * The consent rule here is a compliance requirement (Doc 03 §2), not a product
+ * preference: a regression that let a sign-up through without email consent
+ * would be a legal problem rather than a bug. Email is the only channel — SMS
+ * was removed 2026-08-10.
  */
 
 const valid = {
@@ -25,13 +25,19 @@ const valid = {
   employerZip: '30303',
   role: 'teacher' as const,
   emailConsent: true as const,
-  smsConsent: false,
 }
 
 describe('signup consent rules', () => {
-  it('accepts a sign-up with email consent alone', () => {
-    const result = signupSchema.safeParse({ ...valid, smsConsent: false })
+  it('accepts a sign-up with email consent', () => {
+    expect(signupSchema.safeParse(valid).success).toBe(true)
+  })
+
+  it('ignores a stray smsConsent field rather than rejecting it', () => {
+    // SMS was removed 2026-08-10. A cached client posting the old shape should
+    // still succeed — zod strips unknown keys.
+    const result = signupSchema.safeParse({ ...valid, smsConsent: true })
     expect(result.success).toBe(true)
+    if (result.success) expect('smsConsent' in result.data).toBe(false)
   })
 
   it('rejects a sign-up without email consent', () => {
@@ -42,17 +48,6 @@ describe('signup consent rules', () => {
     }
   })
 
-  it('never lets SMS consent substitute for email consent', () => {
-    const result = signupSchema.safeParse({ ...valid, emailConsent: false, smsConsent: true })
-    expect(result.success).toBe(false)
-  })
-
-  it('defaults SMS consent to false when the field is absent', () => {
-    const { smsConsent: _omitted, ...withoutSms } = valid
-    const result = signupSchema.safeParse(withoutSms)
-    expect(result.success).toBe(true)
-    if (result.success) expect(result.data.smsConsent).toBe(false)
-  })
 })
 
 describe('signup field handling', () => {

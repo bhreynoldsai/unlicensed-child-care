@@ -42,7 +42,6 @@ export default async function Unsubscribe({
             The quickest way to stop email is the <strong>unsubscribe link at the bottom
             of any message</strong> we have sent you. It works in one click, no sign-in.
           </p>
-          <p>To stop text messages, reply STOP to any text.</p>
           <p>
             {CONTACT_EMAIL ? (
               <>

@@ -3,11 +3,7 @@ import { Inter, Source_Serif_4 } from 'next/font/google'
 
 import { BrandMark } from '@/components/BrandMark'
 import { SITE_NAME } from '@/lib/site'
-import {
-  SPONSOR_DISCLAIMER,
-  SPONSOR_NAME,
-  SPONSOR_POSTAL_ADDRESS,
-} from '@/lib/sponsor'
+import { SPONSOR_NAME, SPONSOR_POSTAL_ADDRESS } from '@/lib/sponsor'
 import './globals.css'
 
 const sourceSerif = Source_Serif_4({
@@ -61,9 +57,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
           <footer className="bg-navy-900 px-4 py-8 text-[13px] leading-[1.6] text-navy-300 sm:px-6">
             <div className="mx-auto grid max-w-frame gap-1.5">
-              {/* CAN-SPAM: real sender identity + physical postal address.
-                  Both come from lib/sponsor.ts; `npm run preflight` fails when
-                  the address is unset, so this cannot ship half-filled. */}
+              {/* Sender identity and a physical postal address.
+                  No "Paid for by" line: O.C.G.A. § 21-5-34(f)(3) attribution is
+                  triggered by communications intended to affect an election, and
+                  this is pure legislative advocacy. A voluntary attribution that
+                  named the wrong payer would be worse than none (docs/05 §7 Q3). */}
               <p className="font-bold text-white">{SPONSOR_NAME}</p>
               <p>
                 {SPONSOR_POSTAL_ADDRESS ?? (
@@ -73,7 +71,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   </span>
                 )}
               </p>
-              <p>{SPONSOR_DISCLAIMER}</p>
               <p>
                 <a className="text-gold-300 underline hover:text-white" href="/privacy">
                   Privacy notice

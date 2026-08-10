@@ -79,12 +79,6 @@ advised(
 )
 
 advised(
-  Boolean(process.env.SMS_ACCOUNT_SID?.trim()),
-  'SMS provider configured',
-  'Optional — but do not show the SMS consent box in production if nothing can honor STOP.',
-)
-
-advised(
   Boolean(process.env.GEOCODER_FALLBACK_KEY?.trim()),
   'Commercial geocoder fallback',
   'Addresses the Census database does not contain will stay unmatched without one.',

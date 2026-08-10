@@ -34,6 +34,21 @@ export default async function Poster() {
 
   return (
     <div className="poster-sheet">
+      {/* Screen only — `.poster-tools` is display:none in the print stylesheet,
+          so this never appears on the printed sheet. */}
+      <div className="poster-tools">
+        <span>Need just the QR code for a flyer, slide, or name badge?</span>
+        <a href="/api/qr?size=1024" download>
+          Download PNG
+        </a>
+        <a href="/api/qr?format=svg" download>
+          Download SVG
+        </a>
+        <span className="poster-tools-note">
+          Both encode {printedUrl} — the same link as the poster.
+        </span>
+      </div>
+
       <section className="poster-page">
         <BrandMark size={96} className="poster-mark" />
 

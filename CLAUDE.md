@@ -24,12 +24,13 @@ update the plan deliberately rather than quietly diverging from it.
 
 These are not style preferences. Violating one is a program risk, not a bug.
 
-1. **SMS consent is a separate, unticked checkbox** carrying the exact TCPA
-   express-consent language in `lib/consent.ts`. Sign-up must succeed with
-   **email consent alone**. Never pre-check, bundle, or gate on SMS consent.
-   **Currently hidden** (`NEXT_PUBLIC_SHOW_SMS_CONSENT` unset): the text
-   promises "Reply STOP" and no Twilio campaign exists to honour it. Unhide only
-   once A2P 10DLC is approved and Advanced Opt-Out is on.
+1. **Email is the only contact channel.** SMS was removed 2026-08-10 — the
+   programme is not being run. The consent box is unticked by default and
+   required to sign up. `sms` rows already in `consent_events` stay (the table
+   is append-only) and remain quarantined; nothing reads them. If SMS is ever
+   revived it needs new consent language, counsel review, A2P 10DLC
+   registration, and a working revocation path before a box goes back on the
+   form — not a revert of this commit.
 2. **Consent language is verbatim and hashed as legal evidence.** The strings in
    `lib/consent.ts` are stored with every consent record. Do not reword them —
    not for tone, not for length. **They are currently a build-team draft
@@ -91,7 +92,8 @@ app/
   admin/                district density (AGGREGATE ONLY), gated by middleware.ts
   api/signup/route.ts   rate-limit → Turnstile → validate → geocode → insert
   api/unsubscribe/      honours a signed unsubscribe token
-  api/admin/            login / logout
+  api/admin/            login / logout / CSV export
+  api/qr/               downloadable QR for the sign-up link (PNG or SVG)
   api/health/route.ts
 components/SignupForm.tsx  form, validation display, submit states
 components/Field.tsx       input, select, consent checkbox, fieldset primitives

@@ -39,9 +39,6 @@ export function UnsubscribeConfirm({ token }: { token: string }) {
           You will not receive further email from us. Anything already in transit may
           still arrive shortly.
         </p>
-        <p className="mt-3 text-[15px] leading-[1.55] text-navy-500">
-          Text messages are separate — reply STOP to any text to stop those too.
-        </p>
       </div>
     )
   }
@@ -71,10 +68,6 @@ export function UnsubscribeConfirm({ token }: { token: string }) {
           {state === 'working' ? 'Unsubscribing…' : 'Unsubscribe me'}
         </button>
       </div>
-
-      <p className="text-sm text-navy-500">
-        Text messages are handled separately — reply STOP to any text to stop those.
-      </p>
     </div>
   )
 }

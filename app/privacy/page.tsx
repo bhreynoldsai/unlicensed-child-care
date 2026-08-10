@@ -186,8 +186,8 @@ export default function Privacy() {
         <p>
           We share data with a small number of service providers who operate the
           system on our behalf: our website host, our database host, the U.S. Census
-          Bureau geocoder described above, and the email and text-message providers
-          that deliver what you asked to receive. They may use your information only
+          Bureau geocoder described above, and the email provider that
+          delivers what you asked to receive. They may use your information only
           to provide those services to us.
         </p>
         <p>
@@ -220,7 +220,7 @@ export default function Privacy() {
           <li>Tell you what information we hold about you</li>
           <li>Correct anything that is wrong, including a mismatched district</li>
           <li>Delete your record entirely</li>
-          <li>Stop email, stop texts, or stop both</li>
+          <li>Stop receiving email from us</li>
         </ul>
         <p>
           We aim to respond within 45 days. We will not treat you differently for
