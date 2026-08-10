@@ -408,19 +408,23 @@ export default function SignupForm({ centerCode }: { centerCode: string | null }
             {EMAIL_CONSENT_TEXT}
           </ConsentCheckbox>
 
-          <div className="mt-3">
-            <ConsentCheckbox
-              id="smsConsent"
-              checked={fields.smsConsent}
-              onChange={(v) => set('smsConsent', v)}
-            >
-              {SMS_CONSENT_TEXT}
-            </ConsentCheckbox>
-          </div>
+          {SHOW_SMS_CONSENT ? (
+            <>
+              <div className="mt-3">
+                <ConsentCheckbox
+                  id="smsConsent"
+                  checked={fields.smsConsent}
+                  onChange={(v) => set('smsConsent', v)}
+                >
+                  {SMS_CONSENT_TEXT}
+                </ConsentCheckbox>
+              </div>
 
-          <p className="mt-3 text-sm text-navy-500">
-            Text alerts are optional &mdash; you can sign up with email only.
-          </p>
+              <p className="mt-3 text-sm text-navy-500">
+                Text alerts are optional &mdash; you can sign up with email only.
+              </p>
+            </>
+          ) : null}
         </Fieldset>
 
         <div>
