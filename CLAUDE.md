@@ -60,6 +60,8 @@ These are not style preferences. Violating one is a program risk, not a bug.
 - Legislator roster from OpenStates bulk data (`npm run legislators:import`)
 - Vitest for unit tests (`npm test`) — the consent rules and the relaxed-match
   guard are the two things worth breaking the build over
+- Email via Resend (`lib/email.ts`), disabled unless EMAIL_API_KEY and
+  EMAIL_FROM_ADDRESS are both set
 
 ## Layout
 
@@ -68,9 +70,12 @@ app/
   page.tsx              landing + sign-up
   join/page.tsx         re-exports the landing page at the poster's short URL
   poster/               printable break room poster + its print stylesheet
-  privacy/, unsubscribe/  placeholder pages behind the footer links
-  admin/page.tsx        district density (AGGREGATE ONLY — no auth yet)
-  api/signup/route.ts   validate → geocode → insert supporter + consent + match
+  privacy/              full notice; needs counsel sign-off
+  unsubscribe/          token-confirmed opt-out
+  admin/                district density (AGGREGATE ONLY), gated by middleware.ts
+  api/signup/route.ts   rate-limit → Turnstile → validate → geocode → insert
+  api/unsubscribe/      honours a signed unsubscribe token
+  api/admin/            login / logout
   api/health/route.ts
 components/SignupForm.tsx  form, validation display, submit states
 components/Field.tsx       input, select, consent checkbox, fieldset primitives
@@ -81,6 +86,13 @@ lib/validation.ts       zod schema, role enum, phone normalization
 lib/districts.ts        Census geocoder + district resolution
 lib/db.ts               pool + withTransaction
 lib/site.ts             public URL and share link
+lib/sponsor.ts          CAN-SPAM disclosure block
+lib/auth.ts             admin sessions (Edge-safe, no dependencies)
+lib/email.ts            Resend confirmation mail
+lib/unsubscribe.ts      signed opt-out tokens
+lib/legislators.ts      district → sitting member
+lib/rate-limit.ts       Postgres-backed limiter
+lib/turnstile.ts        bot verification
 db/001_init.sql         schema, density view
 scripts/                migrate, rematch-districts
 docs/                   the four governing plans
@@ -117,7 +129,11 @@ receives and how their voice is framed to a legislator.
 - [ ] Set EMAIL_API_KEY + EMAIL_FROM_ADDRESS. Until both exist no confirmation
       email is sent, so no unsubscribe link exists to click — that is the
       CAN-SPAM gap, not the page.
-- [ ] Sponsoring entity + postal address in the footer (CAN-SPAM).
+- [x] Sponsoring entity + postal address in the footer. Set via
+      `lib/sponsor.ts` / `NEXT_PUBLIC_SPONSOR_*`. **Open for counsel:** a
+      "Paid for by" line names who actually paid — if the Network is not a
+      registered entity, it may need to name the funding organization
+      (`NEXT_PUBLIC_SPONSOR_PAID_FOR_BY`).
 - [ ] Commercial geocoder fallback (`lib/districts.ts` → `fallbackMatch`). The
       Census-only ladder now tries exact → unit-stripped → one-line and
       **verifies** each relaxed result before believing it, so a miss is a clean
@@ -135,8 +151,9 @@ receives and how their voice is framed to a legislator.
 
 ## Open decisions (don't invent answers)
 
-- Sponsoring entity, and whether sign-up is branded to a coalition, an
-  association, or a single company. Placeholders are in `app/layout.tsx`.
+- Whether the "Paid for by" line should name the coalition or the funding
+  entity. Branding is settled: coalition, "Georgia Licensed Child Care
+  Network" (2026-08-09), configured in `lib/sponsor.ts`.
 - **Target state is Georgia by assumption, not confirmation.** Confirm before
   producing state-specific legislative content. The platform is built
   state-agnostic.
