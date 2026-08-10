@@ -13,7 +13,7 @@
  * consent box shown or hidden, wording changed. Not for styling.
  *
  * History:
- *   2026.08.10-1  SMS consent box hidden; email-only consent. Navy/gold brand.
+ *   2026.08.10-1  Email-only consent; SMS removed. Navy/gold brand.
  */
 export const FORM_VERSION = '2026.08.10-1'
 

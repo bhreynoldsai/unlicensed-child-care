@@ -100,10 +100,9 @@ export default function Privacy() {
           <li>Your role — owner, regional manager, corporate staff director, teacher, or a description you provide</li>
         </ul>
         <p>
-          When you check a consent box we also record the date and time, the exact
+          When you check the consent box we also record the date and time, the exact
           wording you agreed to, your IP address, and your browser&rsquo;s user-agent
-          string. That record exists so we can prove what you actually agreed to,
-          which is a legal requirement for sending you email and text messages. We do
+          string. That record exists so we can show what you actually agreed to. We do
           not use it to track you across websites.
         </p>
         <p>
@@ -151,19 +150,19 @@ export default function Privacy() {
 
       <Section title="What we send you, and how to stop it">
         <p>
-          Checking the email box is required to sign up. It means we may send you
+          Checking the consent box is required to sign up. It means we may send you
           updates and action alerts about child care policy in Georgia. Every email
           includes an unsubscribe link, and unsubscribing takes effect promptly.
         </p>
         <p>
-          The text message box is separate and entirely optional. You can sign up with
-          email only, and nothing about your participation changes if you leave it
-          unchecked. If you do check it, message and data rates may apply; reply STOP
-          to any message to stop them and HELP for help.
+          <strong className="font-semibold">
+            Email is the only way we contact you.
+          </strong>{' '}
+          We do not send text messages.
         </p>
         <p>
-          Unsubscribing from email or texts stops the messages. If you also want your
-          record deleted, ask us directly — see below.
+          Unsubscribing stops the messages. If you also want your record deleted, ask
+          us directly — see below.
         </p>
       </Section>
 

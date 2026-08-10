@@ -126,9 +126,9 @@ export function SelectField({
 
 /**
  * The whole row is the label, so the tap target is the full block rather than a
- * 22px box. The text renders at full contrast and full length — the SMS variant
- * carries counsel-reviewed language that may never be truncated, collapsed, or
- * de-emphasized (CLAUDE.md guardrails 1 and 2).
+ * 22px box. The text renders at full contrast and full length — consent
+ * language may never be truncated, collapsed, or de-emphasized, and it is
+ * hashed as legal evidence exactly as displayed (CLAUDE.md guardrails 1–2).
  */
 export function ConsentCheckbox({
   id,
