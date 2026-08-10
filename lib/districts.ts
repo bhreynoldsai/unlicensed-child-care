@@ -59,9 +59,13 @@ export interface AddressInput {
  * Relaxing a query to rescue an address the geocoder could not resolve exactly
  * does not fail cleanly — it returns a *different* address. Observed: asking
  * for "1500 N Patterson St, 31698" without the ZIP returns "1500 S PATTERSON
- * ST, 31601", a different street in a different district. Filing a supporter
- * under the wrong legislator is worse than filing them under none: nobody
- * detects it, and their voice lands in the wrong member's pile.
+ * ST, 31601" — a different street, in a different ZIP.
+ *
+ * In that particular instance both addresses happen to sit in the same
+ * districts, which is exactly why the substitution is dangerous: you cannot
+ * tell from the response whether it changed the answer, and across a state it
+ * often will. Filing a supporter under the wrong legislator is worse than
+ * filing them under none, because nobody detects it.
  *
  * So a relaxed result is accepted only when the address that came back still
  * agrees with what was typed on the three things that move a district line:
@@ -219,17 +223,129 @@ export async function matchAddress(address: AddressInput): Promise<DistrictMatch
   }
 }
 
+const MAPBOX_URL = 'https://api.mapbox.com/search/geocode/v6/forward'
+const CENSUS_COORDS_URL =
+  'https://geocoding.geo.census.gov/geocoder/geographies/coordinates'
+
 /**
- * Commercial fallback. Wire up Google or Mapbox here when a key exists.
- * Returning FAILED_MATCH is deliberate: a supporter is never blocked from
- * signing up because geocoding failed — the record is queued for the
- * re-match batch instead.
+ * Mapbox reports per-component results. We require the parts that can move a
+ * district line to have matched outright — a "confidence: high" result whose
+ * house number was merely approximated can sit on the wrong side of a boundary.
  */
-async function fallbackMatch(_address: AddressInput): Promise<DistrictMatch> {
-  const key = process.env.GEOCODER_FALLBACK_KEY
-  if (!key) return FAILED_MATCH
-  // TODO: implement Google/Mapbox geocode + point-in-polygon against
-  // TIGER/Line shapefiles for GA House, GA Senate, and congressional
-  // boundaries. Until then, fail soft.
-  return FAILED_MATCH
+interface MapboxMatchCode {
+  address_number?: string
+  street?: string
+  postcode?: string
+  region?: string
+  confidence?: string
 }
+
+function mapboxResultIsTrustworthy(
+  submitted: AddressInput,
+  matchCode: MapboxMatchCode | undefined,
+  returnedPostcode: string | undefined,
+  returnedRegion: string | undefined,
+): boolean {
+  if (!matchCode) return false
+  if (matchCode.confidence !== 'exact' && matchCode.confidence !== 'high') return false
+  if (matchCode.address_number !== 'matched') return false
+  if (matchCode.street !== 'matched') return false
+
+  // The same rule the Census ladder applies: the answer has to still describe
+  // the address that was typed.
+  if (returnedPostcode && returnedPostcode.slice(0, 5) !== submitted.zip.slice(0, 5)) return false
+  if (returnedRegion && returnedRegion.toUpperCase() !== submitted.state.toUpperCase()) return false
+
+  return true
+}
+
+/**
+ * Commercial fallback for addresses the Census address database does not hold —
+ * newer suburban streets, most commonly. Census coverage gaps are real: the
+ * first live sign-up on this platform was one.
+ *
+ * Two steps, both cheap:
+ *   1. Mapbox resolves the address to coordinates (100k/month free).
+ *   2. Census resolves those coordinates to districts, via its `coordinates`
+ *      endpoint — so no TIGER/Line shapefiles and no point-in-polygon code,
+ *      and the district boundaries still come from the same authority the
+ *      primary path uses.
+ *
+ * Quality is recorded as `approximate` because the address was not matched by
+ * Census itself. A supporter is never blocked from signing up if this fails;
+ * the record is left for the re-match batch.
+ */
+async function fallbackMatch(address: AddressInput): Promise<DistrictMatch> {
+  const key = process.env.GEOCODER_FALLBACK_KEY?.trim()
+  if (!key) return FAILED_MATCH
+
+  try {
+    const query = `${address.street}, ${address.city}, ${address.state} ${address.zip}`
+    const params = new URLSearchParams({
+      q: query,
+      country: 'US',
+      limit: '1',
+      access_token: key,
+    })
+
+    const geo = await fetch(`${MAPBOX_URL}?${params}`, {
+      signal: AbortSignal.timeout(8000),
+    })
+    if (!geo.ok) throw new Error(`Mapbox returned ${geo.status}`)
+
+    const feature = ((await geo.json()) as { features?: Array<Record<string, any>> })
+      .features?.[0]
+    const props = feature?.properties
+    const coords = props?.coordinates
+    if (!coords?.latitude || !coords?.longitude) return FAILED_MATCH
+
+    if (
+      !mapboxResultIsTrustworthy(
+        address,
+        props.match_code,
+        props.context?.postcode?.name,
+        props.context?.region?.region_code,
+      )
+    ) {
+      return FAILED_MATCH
+    }
+
+    const censusParams = new URLSearchParams({
+      x: String(coords.longitude),
+      y: String(coords.latitude),
+      benchmark: CENSUS_BENCHMARK,
+      vintage: BOUNDARY_VINTAGE,
+      layers: 'all',
+      format: 'json',
+    })
+
+    const res = await fetch(`${CENSUS_COORDS_URL}?${censusParams}`, {
+      signal: AbortSignal.timeout(8000),
+      headers: { 'User-Agent': 'unlicensed-care-platform/0.1 (True North Strategies)' },
+    })
+    if (!res.ok) throw new Error(`Census coordinate lookup returned ${res.status}`)
+
+    const geographies = ((await res.json()) as { result?: { geographies?: Record<string, unknown> } })
+      .result?.geographies
+    if (!geographies) return FAILED_MATCH
+
+    const counties = geographies['Counties'] as Array<Record<string, unknown>> | undefined
+
+    return {
+      latitude: coords.latitude,
+      longitude: coords.longitude,
+      geocoder: 'fallback',
+      matchQuality: 'approximate',
+      stateHouse: pickDistrict(geographies, /State Legislative Districts.*Lower/i),
+      stateSenate: pickDistrict(geographies, /State Legislative Districts.*Upper/i),
+      congressional: pickDistrict(geographies, /Congressional Districts/i),
+      county: (counties?.[0]?.['BASENAME'] as string) ?? null,
+      boundaryVintage: BOUNDARY_VINTAGE,
+    }
+  } catch (err) {
+    console.error('fallback_geocode_failed', err instanceof Error ? err.message : 'unknown')
+    return FAILED_MATCH
+  }
+}
+
+export { mapboxResultIsTrustworthy }

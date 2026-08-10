@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { relaxedMatchIsTrustworthy, type AddressInput } from '@/lib/districts'
+import {
+  mapboxResultIsTrustworthy,
+  relaxedMatchIsTrustworthy,
+  type AddressInput,
+} from '@/lib/districts'
 
 /**
  * These guard the one failure mode that is invisible in production: a relaxed
@@ -18,8 +22,9 @@ const submitted = (over: Partial<AddressInput> = {}): AddressInput => ({
 
 describe('relaxedMatchIsTrustworthy', () => {
   it('rejects the real-world case that motivated it', () => {
-    // Observed: dropping the ZIP turned N Patterson/31698 into S Patterson/31601,
-    // which sits in different House, Senate, and congressional districts.
+    // Observed: dropping the ZIP turned N Patterson/31698 into S Patterson/31601.
+    // Those two happen to share districts; the guard exists because the response
+    // never tells you whether a substitution changed the answer.
     expect(
       relaxedMatchIsTrustworthy(submitted(), '1500 S PATTERSON ST, VALDOSTA, GA, 31601'),
     ).toBe(false)
@@ -88,5 +93,58 @@ describe('relaxedMatchIsTrustworthy', () => {
         '860 PEACHTREE ST NE, ATLANTA, GA, 30308',
       ),
     ).toBe(true)
+  })
+})
+
+describe('mapboxResultIsTrustworthy', () => {
+  const exact = {
+    address_number: 'matched',
+    street: 'matched',
+    postcode: 'matched',
+    region: 'matched',
+    confidence: 'exact',
+  }
+
+  it('accepts an exact match that agrees on ZIP and state', () => {
+    expect(mapboxResultIsTrustworthy(submitted(), exact, '31698', 'GA')).toBe(true)
+  })
+
+  it('rejects a result in a different ZIP', () => {
+    expect(mapboxResultIsTrustworthy(submitted(), exact, '31601', 'GA')).toBe(false)
+  })
+
+  it('rejects a result in a different state', () => {
+    expect(mapboxResultIsTrustworthy(submitted(), exact, '31698', 'FL')).toBe(false)
+  })
+
+  it('rejects low confidence even when every component "matched"', () => {
+    expect(
+      mapboxResultIsTrustworthy(submitted(), { ...exact, confidence: 'low' }, '31698', 'GA'),
+    ).toBe(false)
+  })
+
+  it('rejects an approximated house number — it can land across a district line', () => {
+    expect(
+      mapboxResultIsTrustworthy(
+        submitted(),
+        { ...exact, address_number: 'unmatched' },
+        '31698',
+        'GA',
+      ),
+    ).toBe(false)
+  })
+
+  it('rejects an unmatched street', () => {
+    expect(
+      mapboxResultIsTrustworthy(submitted(), { ...exact, street: 'unmatched' }, '31698', 'GA'),
+    ).toBe(false)
+  })
+
+  it('rejects a response with no match_code at all', () => {
+    expect(mapboxResultIsTrustworthy(submitted(), undefined, '31698', 'GA')).toBe(false)
+  })
+
+  it('tolerates a ZIP+4 in the response', () => {
+    expect(mapboxResultIsTrustworthy(submitted(), exact, '31698-1234', 'GA')).toBe(true)
   })
 })

@@ -42,7 +42,7 @@ DATABASE_SSL=false
 | `npm run db:migrate` | Apply `db/*.sql` in order, once each |
 | `npm run districts:rematch` | Retry failed geocodes (`-- --all` after redistricting) |
 | `npm run legislators:import` | Refresh the legislator roster from OpenStates |
-| `npm test` | Unit tests (consent rules, relaxed-match guard) |
+| `npm test` | Unit tests (consent rules, match guards, unsubscribe tokens) |
 | `npm run preflight` | Launch readiness check — run before sharing the URL |
 
 ## Routes
@@ -51,7 +51,7 @@ DATABASE_SSL=false
 - `/join` — the same page under the short URL printed on the poster
 - `/poster` — letter-size printable break room poster with a generated QR code
 - `/privacy` — full notice describing actual data handling; needs counsel sign-off
-- `/unsubscribe` — placeholder; needs an email provider before it can work
+- `/unsubscribe` — token-confirmed opt-out; also serves Gmail/Yahoo one-click
 - `/admin` — district density, aggregate only. Gated by `middleware.ts`; returns
   503 unless `AUTH_SECRET`, `ADMIN_PASSWORD`, and `ADMIN_ALLOWED_EMAILS` are set
 - `/admin/login` — email + shared password, HMAC-signed 8-hour session
@@ -129,7 +129,12 @@ invisible — a missing Turnstile key leaves the form working but unprotected.
 - [ ] Privacy notice reviewed and signed off by counsel. A draft describing
       the system's actual data handling is live at `/privacy`; two questions in
       the file header need a lawyer, not a developer.
-- [ ] An unsubscribe that actually unsubscribes.
+- [x] An unsubscribe that actually unsubscribes.
+- [ ] `EMAIL_API_KEY` + `EMAIL_FROM_ADDRESS` set and verified by an actual
+      send. Configured is not the same as working — check the Vercel runtime
+      log for `confirmation_email_failed` after a test sign-up.
+- [ ] `GEOCODER_FALLBACK_KEY` set in production, or addresses Census does not
+      hold stay unmatched.
 - [ ] `robots` flipped to `index: true` in `app/layout.tsx`.
 - [ ] Counsel review of the consent language and the employer-solicitation
       approach.
@@ -149,10 +154,25 @@ and street directional.
 
 That guard exists because relaxing a query does not fail cleanly — it returns a
 different address. Asking for `1500 N Patterson St, 31698` without the ZIP
-returns `1500 S PATTERSON ST, 31601`: a different street, in different House,
-Senate, and congressional districts. Filing a supporter under the wrong
-legislator is worse than filing them under none, because nobody detects it.
+returns `1500 S PATTERSON ST, 31601`: a different street in a different ZIP.
+Those two happen to share districts, which is the point — the response gives you
+no way to tell whether the substitution changed the answer, and across a state
+it often will. Filing a supporter under the wrong legislator is worse than
+filing them under none, because nobody detects it.
+
+When Census has no record of the address at all — common for newer suburban
+streets; the first live sign-up on this platform was one — a fourth step runs,
+enabled by `GEOCODER_FALLBACK_KEY`:
+
+1. **Mapbox** resolves the address to coordinates (100k/month free).
+2. **Census** resolves those coordinates to districts via its `coordinates`
+   endpoint — so no TIGER/Line shapefiles and no point-in-polygon code, and
+   boundaries still come from the same authority the primary path uses.
+
+The same scepticism applies: the Mapbox result is only believed when its
+`match_code` reports the house number and street as matched at exact or high
+confidence, and the returned ZIP and state still agree with what was typed.
+These matches are recorded as `approximate` with `geocoder = 'fallback'`.
 
 Anything that cannot be verified is recorded as `failed`, the sign-up still
-succeeds, and `/admin` reports how many are waiting. Those need either a
-commercial geocoder behind `GEOCODER_FALLBACK_KEY` or manual resolution.
+succeeds, and `/admin` reports how many are waiting for manual resolution.
