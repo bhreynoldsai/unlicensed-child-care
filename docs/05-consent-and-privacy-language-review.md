@@ -3,6 +3,14 @@
 **Status: DRAFT. Not legal advice. Prepared by the build team for review.**
 **Prepared 2026-08-09. Nothing here has been reviewed by a lawyer.**
 
+## Where to start
+
+**Read §4 first.** It is the only section that is not about wording, and it is
+the one carrying real exposure: this programme recruits employees *through their
+employers*, for a policy in the employer's commercial interest. The consent
+language in §1 is comparatively routine. §2 (SMS) can be skipped entirely — that
+programme is not running.
+
 ## How to use this document
 
 Everything below is either (a) language currently live on
@@ -10,8 +18,8 @@ Everything below is either (a) language currently live on
 behind each clause. Send it to counsel as-is. The questions in §7 are the ones
 a developer cannot answer.
 
-**The proposed language in §1 and §2 is now live as a placeholder** (applied
-2026-08-09) and marked as such in `lib/consent.ts`. It is drafted to the
+**The language in §1 is now live as a placeholder** (applied 2026-08-09) and
+marked as such in `lib/consent.ts`. It is drafted to the
 stricter standard so the site is defensible in the meantime, but it is not
 reviewed — getting it reviewed is the point of this packet.
 
@@ -52,7 +60,14 @@ should be relaxed to the statutory floor.
 
 ---
 
-## 2. SMS consent
+## 2. SMS consent — DEFERRED, no review needed now
+
+> **The SMS programme is not running.** As of 2026-08-10 the consent checkbox is
+> hidden on the live site and no messages are or will be sent in the current
+> phase. Counsel can skip this section. It is retained only so the language and
+> reasoning survive if an SMS programme is approved later — at which point it
+> needs review before the checkbox is unhidden.
+
 
 ### Previous wording (in records created before 2026-08-09)
 
@@ -86,25 +101,17 @@ standard regardless during A2P 10DLC campaign vetting.
 | "not a condition of participation **or of my employment**" | The added clause is the employer-context mitigation. This program is distributed *through employers*, and that is its distinctive legal exposure — see §4. |
 | "Message frequency varies" | A frequency disclosure is expected. "Recurring" alone is thin; carriers ask for this during campaign registration. |
 | "Message and data rates may apply" | Standard, expected by carriers. |
-| STOP / HELP | Required, and must actually work — see the blocking note below. |
+| STOP / HELP | Required, and must actually work — which is why the box is now hidden. |
 | Carrier liability disclaimer | Industry standard; harmless and expected. |
 | Privacy notice link | Same reasoning as email. |
 
-### Blocking issue
+### Resolved
 
-**The SMS box is currently live on the form and nothing can honour STOP.** No
-Twilio number is provisioned and A2P 10DLC is not registered. Every hour it
-stays up, the campaign accumulates consent records containing a promise it
-cannot presently keep.
-
-Two acceptable resolutions:
-
-1. **Hide the SMS checkbox** until 10DLC clears and Advanced Opt-Out is enabled.
-   One environment variable; the form already succeeds on email consent alone.
-2. **Leave it**, on the reasoning that no messages are being sent, so there is
-   nothing to stop, and the consent is banked for later.
-
-The build team's recommendation is (1). Counsel should decide.
+The checkbox was hidden on 2026-08-10, because its text promised "Reply STOP to
+cancel" and nothing existed to honour it. No SMS consent is being collected.
+The schema, the language, and the `sms` channel in `consent_events` remain in
+place, so this is reversible with one environment variable if an SMS programme
+is later approved and a Twilio A2P 10DLC campaign is registered.
 
 ---
 
@@ -211,8 +218,9 @@ Points counsel should focus on:
    registration, which must match the sender identity shown on the website.
 4. **Does the employer-distribution model need its own consent or disclosure?**
    See §4.
-5. **Is the SMS consent text sufficient for TCPA express written consent**, and
-   is that even the applicable standard for issue advocacy?
+5. ~~Is the SMS consent text sufficient for TCPA express written consent?~~
+   **Deferred** — no SMS programme in this phase. Revisit only if one is
+   approved.
 6. **Is the 24-month retention commitment right**, and should it be built before
    launch or the language softened?
 7. **Should the privacy notice carry an effective date and a change-notification

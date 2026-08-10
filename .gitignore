@@ -20,3 +20,6 @@ next-env.d.ts
 /exports/
 *.csv
 .env*
+
+# generated review exports
+docs/exports/*.docx
