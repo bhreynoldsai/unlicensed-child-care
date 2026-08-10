@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, after } from 'next/server'
 import { signupSchema } from '@/lib/validation'
 import { withTransaction } from '@/lib/db'
 import { matchAddress, FAILED_MATCH } from '@/lib/districts'
@@ -15,6 +15,14 @@ import { verifyTurnstile } from '@/lib/turnstile'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+
+/**
+ * This request does a lot of sequential network work before it can answer:
+ * a rate-limit query, Turnstile verification, two full geocode ladders (each
+ * of which may fall through to Mapbox), a transaction, and a roster lookup.
+ * The default ceiling leaves no headroom for the slowest case.
+ */
+export const maxDuration = 60
 
 /**
  * Generous enough that a break room full of staff on one Wi-Fi network can all
@@ -188,22 +196,32 @@ export async function POST(req: Request) {
   // after the transaction commits: a roster miss must never cost a sign-up.
   const legislators = await lookupLegislators(homeMatch.stateHouse, homeMatch.stateSenate)
 
-  // Confirmation email, best effort. The supporter is already committed, so a
-  // mail failure must not turn a successful sign-up into an error — it is
-  // logged and the confirmation screen still shows them everything.
+  // Confirmation email runs AFTER the response is sent.
+  //
+  // Awaiting it here put the send at the end of an already long request, where
+  // it raced the function's own deadline and aborted — the supporter was saved
+  // but never heard from us. `after()` takes it off the critical path entirely:
+  // the person sees their legislators immediately, and the mail goes out on the
+  // platform's time rather than theirs.
+  //
+  // Still best effort. The supporter is committed either way; a mail failure is
+  // logged, never surfaced as a failed sign-up.
   if (supporterId) {
-    try {
-      await sendConfirmation({
-        supporterId,
-        firstName: d.firstName,
-        email: d.email,
-        siteUrl: SITE_URL,
-        house: { district: homeMatch.stateHouse, name: legislators.house?.name ?? null },
-        senate: { district: homeMatch.stateSenate, name: legislators.senate?.name ?? null },
-      })
-    } catch (err) {
-      console.error('confirmation_email_failed', err instanceof Error ? err.message : 'unknown')
-    }
+    const id = supporterId
+    after(async () => {
+      try {
+        await sendConfirmation({
+          supporterId: id,
+          firstName: d.firstName,
+          email: d.email,
+          siteUrl: SITE_URL,
+          house: { district: homeMatch.stateHouse, name: legislators.house?.name ?? null },
+          senate: { district: homeMatch.stateSenate, name: legislators.senate?.name ?? null },
+        })
+      } catch (err) {
+        console.error('confirmation_email_failed', err instanceof Error ? err.message : 'unknown')
+      }
+    })
   }
 
   return NextResponse.json({

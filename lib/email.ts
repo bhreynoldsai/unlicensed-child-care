@@ -151,7 +151,8 @@ export async function sendConfirmation(input: ConfirmationInput): Promise<void> 
     method: 'POST',
     headers,
     body: JSON.stringify(body),
-    signal: AbortSignal.timeout(8000),
+    // Runs outside the request via `after()`, so it can afford to be patient.
+    signal: AbortSignal.timeout(20000),
   })
 
   if (!res.ok) {
