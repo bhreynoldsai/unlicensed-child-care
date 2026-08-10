@@ -18,8 +18,20 @@ import { unsubscribeUrl } from '@/lib/unsubscribe'
 
 const RESEND_URL = 'https://api.resend.com/emails'
 
+/**
+ * Values pasted into a dashboard pick up stray whitespace and, often enough,
+ * the surrounding quotes. Either turns `Bearer <key>` into a 401 that looks
+ * like a revoked key rather than a copy-paste artefact, so strip both here.
+ */
+function cleanEnv(name: string): string | undefined {
+  const raw = process.env[name]
+  if (!raw) return undefined
+  const trimmed = raw.trim().replace(/^["']|["']$/g, '').trim()
+  return trimmed.length > 0 ? trimmed : undefined
+}
+
 export function emailConfigured(): boolean {
-  return Boolean(process.env.EMAIL_API_KEY && process.env.EMAIL_FROM_ADDRESS)
+  return Boolean(cleanEnv('EMAIL_API_KEY') && cleanEnv('EMAIL_FROM_ADDRESS'))
 }
 
 export interface ConfirmationInput {
@@ -111,12 +123,12 @@ export async function sendConfirmation(input: ConfirmationInput): Promise<void> 
   const { subject, text, html, unsubscribe } = buildConfirmation(input)
 
   const headers: Record<string, string> = {
-    authorization: `Bearer ${process.env.EMAIL_API_KEY}`,
+    authorization: `Bearer ${cleanEnv('EMAIL_API_KEY')}`,
     'content-type': 'application/json',
   }
 
   const body: Record<string, unknown> = {
-    from: process.env.EMAIL_FROM_ADDRESS,
+    from: cleanEnv('EMAIL_FROM_ADDRESS'),
     to: [input.email],
     subject: subject.replace('&rsquo;', '’'),
     text,
@@ -132,7 +144,8 @@ export async function sendConfirmation(input: ConfirmationInput): Promise<void> 
     }
   }
 
-  if (process.env.EMAIL_REPLY_TO) body.reply_to = process.env.EMAIL_REPLY_TO
+  const replyTo = cleanEnv('EMAIL_REPLY_TO')
+  if (replyTo) body.reply_to = replyTo
 
   const res = await fetch(RESEND_URL, {
     method: 'POST',
@@ -142,6 +155,9 @@ export async function sendConfirmation(input: ConfirmationInput): Promise<void> 
   })
 
   if (!res.ok) {
-    throw new Error(`Resend returned ${res.status}`)
+    // Include Resend's own message: a bare 401 reads as "revoked key" when it
+    // is usually a malformed one, and 403 usually means an unverified domain.
+    const detail = await res.text().catch(() => '')
+    throw new Error(`Resend returned ${res.status}${detail ? ` — ${detail.slice(0, 200)}` : ''}`)
   }
 }
