@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 
+import { AlertIcon } from '@/components/icons'
+
 /**
  * Form primitives for the sign-up page.
  *
@@ -33,7 +35,8 @@ function FieldShell({
       {children}
       {error ? (
         <p className="field-error" id={`${id}-error`}>
-          {error}
+          <AlertIcon size={15} className="mt-px flex-none" />
+          <span>{error}</span>
         </p>
       ) : null}
     </div>
@@ -156,7 +159,8 @@ export function ConsentCheckbox({
       </label>
       {error ? (
         <p className="field-error" id={`${id}-error`}>
-          {error}
+          <AlertIcon size={15} className="mt-px flex-none" />
+          <span>{error}</span>
         </p>
       ) : null}
     </>
@@ -180,9 +184,7 @@ export function Fieldset({
         {icon}
         {legend}
       </legend>
-      {helper ? (
-        <p className="-mt-1 mb-s3 text-sm leading-[1.55] text-ink/[.78]">{helper}</p>
-      ) : null}
+      {helper ? <p className="notice mb-4">{helper}</p> : null}
       {children}
     </fieldset>
   )

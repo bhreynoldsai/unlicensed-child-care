@@ -45,11 +45,11 @@ function LoginForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} noValidate className="grid gap-s4">
+    <form onSubmit={onSubmit} noValidate className="grid gap-4">
       {error ? (
         <p
           role="alert"
-          className="rounded-md border-[1.5px] border-danger/40 bg-danger/[.12] px-4 py-3.5 text-[15px] text-danger"
+          className="rounded-md border-[1.5px] border-danger bg-danger-bg px-4 py-3.5 text-[15px] text-danger"
         >
           {error}
         </p>
@@ -96,7 +96,7 @@ export default function AdminLogin() {
   return (
     <div className="mx-auto max-w-[420px] px-5 pb-16 pt-12">
       <h1 className="mb-2 text-[28px] leading-[1.15]">Campaign administration</h1>
-      <p className="mb-s6 text-sm leading-[1.55] text-ink/[.78]">
+      <p className="mb-6 text-sm leading-[1.55] text-navy-500">
         This area shows aggregate district density. It is limited to campaign
         administrators.
       </p>

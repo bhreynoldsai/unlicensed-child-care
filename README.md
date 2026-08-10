@@ -65,19 +65,27 @@ variable **before** printing anything.
 
 ## Design
 
-The sign-up site's look comes from the Claude Design handoff
-(`design_handoff_signup_site`), built on the "Organic" design system: sand
-background, terracotta and sage accents, Caprasimo display over Figtree body.
-Tokens live in `tailwind.config.ts`, component classes in `app/globals.css`.
+Navy and gold civic identity from the GLCCN design handoff — tone target is a
+state professional association, not a petition site. Tokens live in
+`tailwind.config.ts`, component classes in `app/globals.css`, and
+`reference/BRAND-SPECIFICATION.md` in the handoff is the written source.
 
-This replaced the earlier navy/gold placeholders. The site presents as the
-coalition "Georgia Licensed Child Care Network" (confirmed 2026-08-09); the
-wordmark stays typographic and no company logo is baked in, so a rebrand is a
-config change in `lib/sponsor.ts`.
+- **Navy 900 `#0F2340`** carries text, buttons, and the dark header/hero/footer
+  bands. **Navy 50 `#F2F5F9`** is the page background; the form sits in a white
+  card against it.
+- **Gold `#C9A227` is an accent only** — the 3px header rule, focus rings, the
+  4px left border on notices, the checkmark in the mark. It never carries body
+  text and never fills a large button: at these values it fails contrast against
+  white. The one exception is the "Copy link" button, where the label is Navy
+  900 rather than white.
+- **Source Serif 4** for headings, **Inter** for everything else. 8px radius
+  throughout, 48px minimum control height, 8px spacing grid.
+- The mark (Georgia outline + gold check) is inline SVG in
+  `components/BrandMark.tsx` so it stays vector and can be recoloured for the
+  dark and one-colour lockups.
 
-One deliberate deviation from the handoff: its `--color-accent` fill gives only
-3.03:1 against its own button label, below AA at 16px. `.btn-primary` uses
-`accent-700` instead — same hue, two steps down the ramp, 5.72:1.
+Every text element on the landing page, the success panel, and the poster was
+measured against WCAG AA with translucent layers composited — zero failures.
 
 ## Deploying
 

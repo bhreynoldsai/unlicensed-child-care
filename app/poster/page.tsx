@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import QRCode from 'qrcode'
 
-import { LayersIcon } from '@/components/icons'
+import { BrandMark } from '@/components/BrandMark'
 import { VOLUNTARY_PARTICIPATION_NOTICE } from '@/lib/consent'
 import { SHARE_URL } from '@/lib/site'
 
@@ -27,7 +27,7 @@ export default async function Poster() {
     type: 'svg',
     errorCorrectionLevel: 'M',
     margin: 0,
-    color: { dark: '#201e1d', light: '#0000' },
+    color: { dark: '#0F2340', light: '#0000' },
   })
 
   const printedUrl = SHARE_URL.replace(/^https?:\/\//, '')
@@ -35,9 +35,9 @@ export default async function Poster() {
   return (
     <div className="poster-sheet">
       <section className="poster-page">
-        <span className="poster-badge">
-          <LayersIcon size={34} />
-        </span>
+        <BrandMark size={96} className="poster-mark" />
+
+        <p className="poster-overline">Georgia Licensed Child Care Network</p>
 
         <h1 className="poster-headline">
           Licensed child care providers deserve a level playing field.

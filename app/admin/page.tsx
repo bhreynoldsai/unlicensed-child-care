@@ -69,16 +69,16 @@ export default async function AdminPage() {
   const grandTotal = rows.reduce((sum, r) => sum + r.supporter_count, 0)
 
   return (
-    <div className="mx-auto max-w-5xl px-5 py-8">
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
       <AdminBar email={session?.email ?? null} />
 
       <h1 className="text-[28px] leading-[1.15]">District density</h1>
-      <p className="mt-1 text-sm text-ink/[.78]">
+      <p className="mt-1 text-sm text-navy-500">
         Aggregate counts only. Individual enrollment is never reported.
       </p>
 
       {!dbError && (unmatched.failed > 0 || unmatched.approximate > 0) ? (
-        <div className="mt-s4 rounded-md bg-accent-100 px-[18px] py-4 text-sm leading-[1.55]">
+        <div className="mt-4 rounded-md bg-navy-50 px-[18px] py-4 text-sm leading-[1.55]">
           {unmatched.failed > 0 ? (
             <p>
               <strong className="font-semibold">
@@ -101,21 +101,21 @@ export default async function AdminPage() {
       ) : null}
 
       {dbError ? (
-        <p className="mt-6 rounded-md border-[1.5px] border-danger/40 bg-danger/[.12] px-4 py-3 text-danger">
+        <p className="mt-6 rounded-md border-[1.5px] border-danger bg-danger-bg px-4 py-3 text-danger">
           {dbError}
         </p>
       ) : byDistrict.size === 0 ? (
-        <p className="mt-6 text-ink/[.78]">No matched supporters yet.</p>
+        <p className="mt-6 text-navy-500">No matched supporters yet.</p>
       ) : (
         <>
-          <p className="mt-s4 text-sm text-ink/[.78]">
+          <p className="mt-4 text-sm text-navy-500">
             {grandTotal} matched supporter{grandTotal === 1 ? '' : 's'} across{' '}
             {byDistrict.size} House district{byDistrict.size === 1 ? '' : 's'}.
           </p>
-          <div className="mt-s4 overflow-x-auto rounded-md border-[1.5px] border-ink/[.16] bg-surface">
+          <div className="mt-4 overflow-x-auto rounded-md border-[1.5px] border-navy-100 bg-white">
             <table className="w-full text-sm">
               <thead className="text-left">
-                <tr className="border-b-[1.5px] border-ink/[.16]">
+                <tr className="border-b-[1.5px] border-navy-100">
                   <th className="px-4 py-3 font-semibold">GA House district</th>
                   {roles.map((r) => (
                     <th key={r} className="px-4 py-3 font-semibold">
@@ -131,10 +131,10 @@ export default async function AdminPage() {
                   .map(([district, counts]) => {
                     const total = Object.values(counts).reduce((a, b) => a + b, 0)
                     return (
-                      <tr key={district} className="border-b border-ink/[.08] last:border-0">
+                      <tr key={district} className="border-b border-navy-100 last:border-0">
                         <td className="px-4 py-3 font-semibold">{district}</td>
                         {roles.map((r) => (
-                          <td key={r} className="px-4 py-3 text-ink/[.8]">
+                          <td key={r} className="px-4 py-3 text-navy-500">
                             {counts[r] ?? 0}
                           </td>
                         ))}

@@ -6,17 +6,18 @@
   html {
     -webkit-text-size-adjust: 100%;
   }
+
   body {
-    @apply bg-sand text-ink antialiased;
+    @apply bg-navy-50 text-navy-900 antialiased;
   }
+
   h1,
   h2,
   h3,
   h4 {
-    @apply font-heading font-normal;
-    line-height: 1.12;
-    letter-spacing: -0.015em;
+    @apply font-heading font-bold;
   }
+
   /* 16px minimum on inputs stops iOS Safari from zooming on focus —
      this form is used on phones in break rooms. */
   input,
@@ -24,71 +25,60 @@
   textarea {
     font-size: 16px;
   }
-  /* No default browser focus ring anywhere — themed rings only. */
+
+  /* Navy border plus a soft gold ring, per the brand spec. Never the default
+     browser outline. */
   :focus {
     outline: none;
   }
+
   :focus-visible {
-    @apply outline-2 outline-offset-2 outline-accent;
-  }
-  ::selection {
-    background: rgba(198, 113, 57, 0.3);
+    @apply outline-3 outline-gold-300;
   }
 }
 
 @layer components {
   .field-label {
-    @apply mb-1.5 block text-sm text-ink/[.78];
+    @apply mb-1.5 block text-sm font-semibold text-navy-900;
   }
 
-  /* 48px minimum height for touch. */
+  /* 48px minimum height for touch; white fill on a Navy 100 border. */
   .field-input {
-    @apply w-full min-h-[48px] rounded-md border-[1.5px] border-ink/[.16] bg-surface
-           px-3.5 py-3 text-base text-ink transition
-           hover:border-ink/[.45]
-           focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent;
+    @apply min-h-[48px] w-full rounded-md border-[1.5px] border-navy-100 bg-white px-3.5 text-base text-navy-900 transition;
+  }
+
+  .field-input:focus-visible {
+    @apply border-navy-900 outline-3 outline-offset-0 outline-gold-300;
   }
 
   .field-input[aria-invalid='true'] {
     @apply border-danger;
   }
 
+  /* Errors carry an icon as well as colour — never colour alone. */
   .field-error {
-    @apply mt-1.5 text-[13px] text-danger;
-  }
-
-  /* The primary button is the single most important control on the page.
-     The design system's own --color-accent fill gives only 3.03:1 against its
-     label, below AA at 16px; accent-700 is the same hue two steps down the
-     ramp and clears it at 5.72:1. */
-  .btn-primary {
-    @apply inline-flex w-full min-h-[52px] items-center justify-center gap-2 rounded-full
-           bg-accent-700 px-4 py-3 font-heading text-base text-sand transition
-           hover:bg-accent-800 active:bg-accent-900
-           disabled:cursor-not-allowed;
-  }
-
-  /* Only ever disabled mid-submit, alongside a spinner and a "Signing you up…"
-     label. Fading it would drop the label under AA exactly when someone is
-     watching it, so it darkens instead of dimming. */
-  .btn-primary:disabled {
-    @apply bg-accent-900 opacity-100;
-  }
-
-  .btn-compact {
-    @apply w-full min-h-0 px-4 py-2 text-sm sm:w-auto;
+    @apply mt-2 flex items-start gap-1.5 text-[13px] text-danger;
   }
 
   .section-heading {
-    @apply mb-1 flex w-full items-center gap-2 font-heading text-xl text-ink;
+    @apply mb-3.5 flex w-full items-center gap-2 font-heading text-lg font-bold text-navy-900;
   }
 
-  /* Sized to hold ~55 words of legally required text at full contrast, with the
-     whole label row tappable. Never truncate, collapse, or dim this
+  /* Notices: Navy 50 fill with a 4px gold left border. */
+  .notice {
+    @apply rounded-md border border-navy-100 border-l-4 border-l-gold-500 bg-navy-50 px-4 py-3.5 text-sm leading-[1.5];
+  }
+
+  /* The same notice pattern inverted, for use on the navy hero band. */
+  .notice-on-dark {
+    @apply rounded-md border-l-4 border-l-gold-500 bg-white/[.07] p-4 text-base font-semibold leading-[1.5] text-white;
+  }
+
+  /* Sized to hold ~55 words of legally required text at full contrast, with
+     the whole label row tappable. Never truncate, collapse, or dim this
      (CLAUDE.md guardrails 1 and 2). */
   .consent-row {
-    @apply flex min-h-[44px] cursor-pointer items-start gap-3.5 rounded-md
-           border-[1.5px] border-ink/[.16] bg-surface p-4 transition hover:border-ink/[.45];
+    @apply flex min-h-[44px] cursor-pointer items-start gap-3 rounded-md border-[1.5px] border-navy-100 bg-white p-3.5 transition hover:border-navy-500;
   }
 
   .consent-row[data-invalid='true'] {
@@ -96,20 +86,37 @@
   }
 
   .consent-row input[type='checkbox'] {
-    @apply mt-0.5 h-[22px] w-[22px] flex-none cursor-pointer accent-accent;
+    @apply mt-0.5 h-5 w-5 flex-none cursor-pointer accent-navy-900;
   }
 
   .consent-row span {
-    @apply text-sm leading-[1.55] text-ink;
+    @apply text-sm leading-[1.55] text-navy-900;
   }
 
   .consent-row:has(input:focus-visible) {
-    @apply outline-2 outline-offset-2 outline-accent;
+    @apply outline-3 outline-offset-2 outline-gold-300;
   }
 
-  /* Photos read as texture rather than stock art. */
-  .washed {
-    filter: saturate(0.6) contrast(0.85) brightness(1.1) opacity(0.94);
+  /* Primary button: Navy 900 fill, white label, Deep Navy hover. Gold is
+     never a large fill — it fails contrast at this size. */
+  .btn-primary {
+    @apply flex min-h-[52px] w-full items-center justify-center gap-2.5 rounded-md bg-navy-900 px-4 text-base font-bold text-white transition hover:bg-navy-700 disabled:cursor-not-allowed disabled:bg-navy-700;
+  }
+
+  /* Gold is legible here only because the label is Navy 900, not white. */
+  .btn-gold {
+    @apply inline-flex min-h-[48px] items-center justify-center gap-2 rounded-md bg-gold-500 px-5 text-[15px] font-bold text-navy-900 transition hover:bg-gold-300;
+  }
+
+  .card {
+    @apply rounded-md border border-navy-100 bg-white shadow-card;
+  }
+}
+
+@layer utilities {
+  /* Tailwind 3 has no outline-width scale beyond 0/1/2/4/8. */
+  .outline-3 {
+    outline-width: 3px;
   }
 }
 
@@ -121,10 +128,10 @@
 
 .spinner {
   display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2.5px solid rgba(245, 234, 216, 0.6);
-  border-top-color: #f5ead8;
+  width: 15px;
+  height: 15px;
+  border: 2.5px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
   border-radius: 50%;
   animation: spin-loader 0.7s linear infinite;
 }

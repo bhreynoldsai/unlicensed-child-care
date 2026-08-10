@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next'
-import { Caprasimo, Figtree } from 'next/font/google'
+import { Inter, Source_Serif_4 } from 'next/font/google'
 
-import { PeopleIcon } from '@/components/icons'
+import { BrandMark } from '@/components/BrandMark'
 import { SITE_NAME } from '@/lib/site'
 import {
   SPONSOR_DISCLAIMER,
@@ -10,15 +10,15 @@ import {
 } from '@/lib/sponsor'
 import './globals.css'
 
-const caprasimo = Caprasimo({
-  weight: '400',
+const sourceSerif = Source_Serif_4({
+  weight: ['600', '700'],
   subsets: ['latin'],
   variable: '--font-heading',
   display: 'swap',
 })
 
-const figtree = Figtree({
-  weight: ['400', '600', '700'],
+const inter = Inter({
+  weight: ['400', '500', '600', '700'],
   subsets: ['latin'],
   variable: '--font-body',
   display: 'swap',
@@ -34,35 +34,37 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#f5ead8',
+  themeColor: '#0F2340',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${caprasimo.variable} ${figtree.variable}`}>
+    <html lang="en" className={`${sourceSerif.variable} ${inter.variable}`}>
       <body>
         <div className="flex min-h-screen flex-col">
-          {/* The wordmark slot is deliberately typographic. The sponsoring
-              entity is unconfirmed (Doc 01), so nothing here bakes in a company
-              logo — swap the badge and the name together once it is. */}
-          <header className="flex items-center gap-3 border-b border-ink/[.16] px-5 py-s4 sm:px-12">
-            <span className="grid h-[34px] w-[34px] flex-none place-content-center rounded-full bg-sage-200">
-              <PeopleIcon size={18} className="text-sage-800" />
+          {/* Navy band with a 3px gold rule. The header and the hero below it
+              read as one continuous dark block. */}
+          <header className="flex items-center gap-3 border-b-[3px] border-gold-500 bg-navy-900 px-4 py-4 sm:px-6">
+            <span className="flex size-[52px] flex-none items-center justify-center rounded-md bg-white sm:size-[76px]">
+              <BrandMark size={36} className="sm:hidden" />
+              <BrandMark size={50} className="hidden sm:block" />
             </span>
-            <span className="font-heading text-lg tracking-[-0.01em]">{SITE_NAME}</span>
+            <span className="font-heading text-xl font-bold leading-tight text-white sm:text-3xl">
+              {SITE_NAME}
+            </span>
           </header>
 
           <main className="flex-1">{children}</main>
 
-          <footer className="border-t border-ink/[.16] px-5 py-s6 text-[13px] leading-[1.6] text-ink/[.65] sm:px-8">
-            <div className="mx-auto grid max-w-[640px] gap-1.5">
+          <footer className="bg-navy-900 px-4 py-8 text-[13px] leading-[1.6] text-navy-300 sm:px-6">
+            <div className="mx-auto grid max-w-frame gap-1.5">
               {/* CAN-SPAM: real sender identity + physical postal address.
                   Both come from lib/sponsor.ts; `npm run preflight` fails when
                   the address is unset, so this cannot ship half-filled. */}
-              <p className="font-semibold text-ink/[.85]">{SPONSOR_NAME}</p>
+              <p className="font-bold text-white">{SPONSOR_NAME}</p>
               <p>
                 {SPONSOR_POSTAL_ADDRESS ?? (
-                  <span className="text-danger">
+                  <span className="text-gold-300">
                     [Postal address required before launch &mdash; set
                     NEXT_PUBLIC_SPONSOR_POSTAL_ADDRESS]
                   </span>
@@ -70,11 +72,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </p>
               <p>{SPONSOR_DISCLAIMER}</p>
               <p>
-                <a className="text-accent-700 underline hover:text-accent" href="/privacy">
+                <a className="text-gold-300 underline hover:text-white" href="/privacy">
                   Privacy notice
                 </a>{' '}
                 &middot;{' '}
-                <a className="text-accent-700 underline hover:text-accent" href="/unsubscribe">
+                <a className="text-gold-300 underline hover:text-white" href="/unsubscribe">
                   Unsubscribe
                 </a>
               </p>

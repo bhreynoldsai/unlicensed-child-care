@@ -30,16 +30,16 @@ export function UnsubscribeConfirm({ token }: { token: string }) {
 
   if (state === 'done') {
     return (
-      <div className="rounded-[32px] bg-surface p-6 shadow-card sm:p-9">
+      <div className="rounded-[32px] bg-white p-6 shadow-card sm:p-9">
         <h2 className="mb-2 flex items-center gap-2 font-heading text-[22px]">
-          <CheckIcon size={20} className="text-sage-800" />
+          <CheckIcon size={20} className="text-navy-900" />
           You&rsquo;re unsubscribed.
         </h2>
-        <p className="text-[15px] leading-[1.55] text-ink/80">
+        <p className="text-[15px] leading-[1.55] text-navy-500">
           You will not receive further email from us. Anything already in transit may
           still arrive shortly.
         </p>
-        <p className="mt-s3 text-[15px] leading-[1.55] text-ink/80">
+        <p className="mt-3 text-[15px] leading-[1.55] text-navy-500">
           Text messages are separate — reply STOP to any text to stop those too.
         </p>
       </div>
@@ -47,13 +47,13 @@ export function UnsubscribeConfirm({ token }: { token: string }) {
   }
 
   return (
-    <div className="grid gap-s4 text-base leading-[1.65]">
+    <div className="grid gap-4 text-base leading-[1.65]">
       <p>Confirm below and we will stop sending you email.</p>
 
       {state === 'error' ? (
         <p
           role="alert"
-          className="rounded-md border-[1.5px] border-danger/40 bg-danger/[.12] px-4 py-3.5 text-[15px] text-danger"
+          className="rounded-md border-[1.5px] border-danger bg-danger-bg px-4 py-3.5 text-[15px] text-danger"
         >
           We could not complete that. Please try again, or reply to any message from us
           and we will remove you by hand.
@@ -72,7 +72,7 @@ export function UnsubscribeConfirm({ token }: { token: string }) {
         </button>
       </div>
 
-      <p className="text-sm text-ink/[.7]">
+      <p className="text-sm text-navy-500">
         Text messages are handled separately — reply STOP to any text to stop those.
       </p>
     </div>

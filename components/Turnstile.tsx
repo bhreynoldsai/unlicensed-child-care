@@ -65,7 +65,7 @@ export function Turnstile({ onToken }: { onToken: (token: string | null) => void
         strategy="afterInteractive"
         onReady={() => setScriptReady(true)}
       />
-      <div ref={containerRef} id={domId} className="mt-s3" />
+      <div ref={containerRef} id={domId} className="mt-3" />
     </>
   )
 }

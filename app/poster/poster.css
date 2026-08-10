@@ -1,9 +1,6 @@
-/* Poster layout in physical units — the artboard is a sheet of Letter paper, so
-   inches beat rems here. On screen the sheet previews centered on a neutral
-   field; in print it is the page.
-
-   Colors are literal rather than Tailwind classes because this file is also the
-   print stylesheet, and a printer needs the exact ink. */
+/* Break room poster — GLCCN navy/gold. Letter-size artboard, so the layout is
+   in physical units. Colours are literal because this file is also the print
+   stylesheet, and a printer needs the exact ink. */
 
 @page {
   size: letter;
@@ -17,10 +14,8 @@ body:has(.poster-sheet) > div > footer {
   display: none;
 }
 
-/* Tint the whole viewport, not just the sheet's box, so the preview reads as a
-   sheet of paper on a desk rather than a beige block on a beige page. */
 html:has(.poster-sheet) {
-  background: #dcd3c4;
+  background: #E3E9F2;
 }
 
 .poster-sheet {
@@ -28,7 +23,7 @@ html:has(.poster-sheet) {
   place-items: center;
   min-height: 100vh;
   padding: 24px;
-  background: #dcd3c4;
+  background: #E3E9F2;
 }
 
 .poster-page {
@@ -41,43 +36,46 @@ html:has(.poster-sheet) {
   height: 11in;
   padding: 0.9in 0.8in;
   text-align: center;
-  background: #f5ead8;
-  color: #201e1d;
-  box-shadow: 0 3px 10px rgba(46, 43, 37, 0.16);
+  background: #fff;
+  color: #0F2340;
+  box-shadow: 0 1px 3px rgba(15, 35, 64, 0.12);
 }
 
-.poster-badge {
-  display: grid;
-  place-content: center;
-  flex: none; /* the column flex parent would otherwise squash it to an oval */
-  width: 64px;
-  height: 64px;
-  margin-bottom: 0.35in;
-  border-radius: 50%;
-  background: #e1eecc;
-  color: #3d472b;
+.poster-mark {
+  flex: none; /* the column flex parent would otherwise squash it */
+  margin-bottom: 0.28in;
+}
+
+.poster-overline {
+  margin: 0 0 0.18in;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #9A7B18;
 }
 
 .poster-headline {
-  max-width: 8in;
-  margin: 0 0 0.3in;
-  font-size: 52px;
-  line-height: 1.12;
-  letter-spacing: -0.01em;
+  max-width: 7.4in;
+  margin: 0 0 0.26in;
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: #0F2340;
 }
 
 .poster-lede {
-  max-width: 6.6in;
-  margin: 0 0 0.5in;
-  font-size: 22px;
+  max-width: 6.4in;
+  margin: 0 0 0.42in;
+  font-size: 21px;
   line-height: 1.5;
-  color: rgba(32, 30, 29, 0.85);
+  color: #3F5F8A;
 }
 
 .poster-qr {
-  width: 3.6in;
-  height: 3.6in;
-  margin-bottom: 0.5in;
+  width: 3.4in;
+  height: 3.4in;
+  margin-bottom: 0.42in;
 }
 
 .poster-qr svg {
@@ -86,34 +84,36 @@ html:has(.poster-sheet) {
   height: 100%;
 }
 
+/* Navy Mist panel with the 4px gold left border — the system's notice. */
 .poster-notice {
   max-width: 6.4in;
-  margin: 0 0 0.35in;
-  padding: 0.22in 0.3in;
-  border-radius: 16px;
-  background: #f0fae1;
-  color: #3d472b;
-  font-size: 19px;
+  margin: 0 0 0.32in;
+  padding: 0.2in 0.28in;
+  border: 1px solid #E3E9F2;
+  border-left: 4px solid #C9A227;
+  border-radius: 8px;
+  background: #F2F5F9;
+  color: #0F2340;
+  font-size: 18px;
   font-weight: 600;
-  line-height: 1.5;
+  line-height: 1.45;
+  text-align: left;
 }
 
 .poster-url {
   margin: 0;
   font-size: 16px;
-  font-weight: 600;
-  letter-spacing: 0.03em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: rgba(32, 30, 29, 0.6);
+  color: #0F2340;
 }
 
-/* Small screens preview the sheet scaled down rather than scrolled sideways. */
 @media screen and (max-width: 9in) {
   .poster-sheet {
     padding: 0;
     overflow: hidden;
   }
-
   .poster-page {
     transform: scale(min(1, calc((100vw - 24px) / 8.5in)));
     transform-origin: center;
@@ -127,7 +127,6 @@ html:has(.poster-sheet) {
     padding: 0;
     background: none;
   }
-
   .poster-page {
     width: 100%;
     height: 100vh;

@@ -37,20 +37,20 @@ const UPDATED = 'August 9, 2026'
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="mt-s8">
-      <h2 className="mb-s3 font-heading text-[22px] leading-tight">{title}</h2>
-      <div className="grid gap-s3 text-base leading-[1.65]">{children}</div>
+    <section className="mt-8">
+      <h2 className="mb-3 font-heading text-[22px] font-bold leading-tight">{title}</h2>
+      <div className="grid gap-3 text-base leading-[1.65]">{children}</div>
     </section>
   )
 }
 
 export default function Privacy() {
   return (
-    <div className="mx-auto max-w-[640px] px-5 pb-16 pt-7 sm:px-8 sm:pt-12">
-      <h1 className="mb-s3 text-[clamp(28px,6vw,36px)] leading-[1.15]">Privacy notice</h1>
-      <p className="text-sm text-ink/[.7]">Last updated {UPDATED}</p>
+    <div className="mx-auto max-w-frame px-4 pb-16 pt-8 sm:px-6">
+      <h1 className="mb-3 text-[clamp(28px,6vw,36px)] leading-[1.15]">Privacy notice</h1>
+      <p className="text-sm text-navy-500">Last updated {UPDATED}</p>
 
-      <p className="mt-s6 text-base leading-[1.65]">
+      <p className="mt-6 text-base leading-[1.65]">
         This notice explains what {SPONSOR_NAME} collects when you sign up, why we
         collect it, who sees it, and how to get it removed. It describes what the
         system actually does. If our practices change, this page changes with them.
@@ -251,7 +251,7 @@ export default function Privacy() {
               Email{' '}
               <a
                 href={`mailto:${CONTACT_EMAIL}`}
-                className="text-accent-700 underline hover:text-accent"
+                className="text-navy-700 underline hover:text-navy-900"
               >
                 {CONTACT_EMAIL}
               </a>

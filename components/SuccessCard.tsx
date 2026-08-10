@@ -36,44 +36,43 @@ function SeatCard({
   chamberLabel,
   district,
   legislator,
-  tone,
 }: {
   chamberLabel: string
   district: string | null
   legislator: Legislator | null
-  tone: 'accent' | 'sage'
 }) {
-  const surface = tone === 'accent' ? 'bg-accent-100' : 'bg-sage-100'
-  const kicker = tone === 'accent' ? 'text-accent-800' : 'text-sage-800'
-
   return (
-    <div className={`rounded-md ${surface} px-[18px] py-4`}>
-      <div className={`text-[11px] font-semibold uppercase tracking-[0.08em] ${kicker}`}>
+    <div className="rounded-md bg-white px-[18px] py-4">
+      <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-navy-500">
         {chamberLabel}
         {district ? ` · District ${district}` : ''}
       </div>
 
       {legislator ? (
         <>
-          <div className="mt-1 font-heading text-2xl leading-tight">{legislator.name}</div>
+          <div className="mt-1 font-heading text-2xl font-bold leading-tight text-navy-900">
+            {legislator.name}
+          </div>
           {legislator.party ? (
-            <div className="mt-0.5 text-sm text-ink/[.7]">{legislator.party}</div>
+            <div className="mt-0.5 text-sm text-navy-500">{legislator.party}</div>
           ) : null}
           {legislator.url ? (
             <a
               href={legislator.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-1.5 inline-block text-sm text-accent-700 underline hover:text-accent"
+              className="mt-1.5 inline-block text-sm text-navy-700 underline hover:text-navy-900"
             >
               Official page
             </a>
           ) : null}
         </>
       ) : district ? (
-        <div className="mt-1 font-heading text-2xl leading-tight">District {district}</div>
+        <div className="mt-1 font-heading text-2xl font-bold leading-tight text-navy-900">
+          District {district}
+        </div>
       ) : (
-        <div className="mt-1 text-[15px] text-ink/[.8]">
+        <div className="mt-1 text-[15px] text-navy-500">
           We&rsquo;ll confirm this in your first email.
         </div>
       )}
@@ -130,14 +129,20 @@ export default function SuccessCard({
   }
 
   return (
-    <div className="rounded-[32px] bg-surface p-6 shadow-card sm:p-9">
-      <h2 ref={headingRef} tabIndex={-1} className="mb-2 font-heading text-[26px] outline-none">
-        You&rsquo;re signed up. Thank you.
+    <div className="overflow-hidden rounded-md bg-navy-900">
+      <div className="h-1 bg-gold-500" />
+      <div className="p-6 sm:p-8">
+      <h2
+        ref={headingRef}
+        tabIndex={-1}
+        className="mb-2 font-heading text-2xl font-bold text-white outline-none"
+      >
+        You&rsquo;re connected to your Georgia legislators.
       </h2>
 
       {matched ? (
         <>
-          <p className="mb-5 text-[15px] leading-[1.55] text-ink/80">
+          <p className="mb-5 text-[15px] leading-[1.55] text-navy-100">
             Based on your home address, you are represented by:
           </p>
 
@@ -146,23 +151,21 @@ export default function SuccessCard({
               chamberLabel="Georgia House"
               district={districts.stateHouse}
               legislator={legislators?.house ?? null}
-              tone="accent"
             />
             <SeatCard
               chamberLabel="Georgia Senate"
               district={districts.stateSenate}
               legislator={legislators?.senate ?? null}
-              tone="sage"
             />
           </div>
 
           {CONTACT_EMAIL && (legislators?.house || legislators?.senate) ? (
-            <p className="mt-s3 text-[13px] leading-[1.55] text-ink/[.7]">
+            <p className="mt-3 text-[13px] leading-[1.55] text-navy-200">
               Not who you expected? Addresses near a district line can match the
               wrong side.{' '}
               <a
                 href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Legislator match looks wrong')}`}
-                className="text-accent-700 underline hover:text-accent"
+                className="text-gold-300 underline hover:text-white"
               >
                 Tell us
               </a>{' '}
@@ -171,24 +174,25 @@ export default function SuccessCard({
           ) : null}
         </>
       ) : (
-        <p className="text-[15px] leading-[1.55] text-ink/80">
+        <p className="text-[15px] leading-[1.55] text-navy-100">
           We could not match your address to a district automatically, but your sign-up is
           recorded. We will confirm your state House and Senate districts in your first
           email.
         </p>
       )}
 
-      <div className="mt-s6 border-t border-ink/[.16] pt-5">
-        <h3 className="mb-1.5 font-heading text-lg">Help us reach your coworkers</h3>
-        <p className="mb-4 text-sm leading-[1.55] text-ink/[.78]">
-          The more licensed providers in each district, the more weight this carries. Share
-          this link with anyone in licensed child care.
+      <div className="mt-7 border-t border-white/15 pt-6">
+        <h3 className="mb-1.5 font-heading text-[17px] font-semibold text-white">
+          Share with a coworker
+        </h3>
+        <p className="mb-3.5 text-sm leading-[1.55] text-navy-100">
+          The more licensed providers in each district, the more weight this carries.
         </p>
         <div className="flex flex-wrap items-center gap-2.5">
-          <div className="min-w-[200px] flex-1 overflow-hidden text-ellipsis whitespace-nowrap rounded-md border-[1.5px] border-dashed border-ink/[.16] bg-sand px-3.5 py-2.5 text-sm text-ink/[.65]">
+          <div className="min-w-[180px] flex-1 overflow-hidden text-ellipsis whitespace-nowrap rounded-md border-[1.5px] border-dashed border-gold-300 bg-white/[.08] px-3.5 py-3 text-sm text-gold-300">
             {SHARE_URL.replace(/^https?:\/\//, '')}
           </div>
-          <button type="button" className="btn-primary btn-compact" onClick={copyLink}>
+          <button type="button" className="btn-gold" onClick={copyLink}>
             {copied ? (
               <>
                 <CheckIcon size={16} />
@@ -202,6 +206,7 @@ export default function SuccessCard({
         <p aria-live="polite" className="sr-only">
           {copied ? 'Link copied to clipboard.' : ''}
         </p>
+      </div>
       </div>
     </div>
   )

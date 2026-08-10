@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 
 import { ConsentCheckbox, Fieldset, SelectField, TextField } from '@/components/Field'
-import { HouseIcon } from '@/components/icons'
+import { AlertIcon, HouseIcon } from '@/components/icons'
 import SuccessCard, {
   type MatchedDistricts,
   type MatchedLegislators,
@@ -173,15 +173,20 @@ export default function SignupForm({ centerCode }: { centerCode: string | null }
           ref={bannerRef}
           role="alert"
           tabIndex={-1}
-          className="mb-s4 rounded-md border-[1.5px] border-danger/40 bg-danger/[.12] px-4 py-3.5 text-[15px] leading-[1.5] text-danger outline-none"
+          className="mb-6 rounded-md border-[1.5px] border-danger bg-danger-bg px-4 py-3.5 text-[15px] leading-[1.5] text-danger outline-none"
         >
           {message}
         </p>
       ) : null}
 
-      <form ref={formRef} onSubmit={handleSubmit} noValidate className="grid gap-s8">
+      <form
+        ref={formRef}
+        onSubmit={handleSubmit}
+        noValidate
+        className="card grid gap-10 p-5 sm:p-8"
+      >
         <Fieldset legend="Your contact information">
-          <div className="grid grid-cols-1 gap-s4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <TextField
               id="firstName"
               label="First name"
@@ -201,7 +206,7 @@ export default function SignupForm({ centerCode }: { centerCode: string | null }
               error={errors.lastName}
             />
           </div>
-          <div className="mt-s4 grid grid-cols-1 gap-s4 sm:grid-cols-2">
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <TextField
               id="email"
               label="Email"
@@ -225,7 +230,7 @@ export default function SignupForm({ centerCode }: { centerCode: string | null }
               error={errors.cellPhone}
             />
           </div>
-          <div className="mt-s4">
+          <div className="mt-4">
             <TextField
               id="otherPhone"
               label="Other phone (optional)"
@@ -254,7 +259,7 @@ export default function SignupForm({ centerCode }: { centerCode: string | null }
             onChange={(v) => set('homeStreet', v)}
             error={errors.homeStreet}
           />
-          <div className="mt-s4">
+          <div className="mt-4">
             <TextField
               id="homeStreet2"
               label="Apartment, suite, etc. (optional)"
@@ -264,7 +269,7 @@ export default function SignupForm({ centerCode }: { centerCode: string | null }
               error={errors.homeStreet2}
             />
           </div>
-          <div className="mt-s4 grid grid-cols-[2fr_1fr_1fr] gap-s4">
+          <div className="mt-4 grid grid-cols-[2fr_1fr_1fr] gap-4">
             <TextField
               id="homeCity"
               label="City"
@@ -308,7 +313,7 @@ export default function SignupForm({ centerCode }: { centerCode: string | null }
             onChange={(v) => set('employerName', v)}
             error={errors.employerName}
           />
-          <div className="mt-s4">
+          <div className="mt-4">
             <TextField
               id="employerStreet"
               label="Street address"
@@ -318,7 +323,7 @@ export default function SignupForm({ centerCode }: { centerCode: string | null }
               error={errors.employerStreet}
             />
           </div>
-          <div className="mt-s4 grid grid-cols-[2fr_1fr_1fr] gap-s4">
+          <div className="mt-4 grid grid-cols-[2fr_1fr_1fr] gap-4">
             <TextField
               id="employerCity"
               label="City"
@@ -349,7 +354,7 @@ export default function SignupForm({ centerCode }: { centerCode: string | null }
           </div>
         </Fieldset>
 
-        <Fieldset legend="Your role" icon={<HouseIcon size={18} className="text-accent-700" />}>
+        <Fieldset legend="Your role" icon={<HouseIcon size={18} className="text-gold-700" />}>
           <SelectField
             id="role"
             label="Which best describes you?"
@@ -360,7 +365,7 @@ export default function SignupForm({ centerCode }: { centerCode: string | null }
             error={errors.role}
           />
           {fields.role === 'other' ? (
-            <div className="mt-s4">
+            <div className="mt-4">
               <TextField
                 id="roleOther"
                 label="Tell us your role"
@@ -386,7 +391,7 @@ export default function SignupForm({ centerCode }: { centerCode: string | null }
             {EMAIL_CONSENT_TEXT}
           </ConsentCheckbox>
 
-          <div className="mt-s3">
+          <div className="mt-3">
             <ConsentCheckbox
               id="smsConsent"
               checked={fields.smsConsent}
@@ -396,7 +401,7 @@ export default function SignupForm({ centerCode }: { centerCode: string | null }
             </ConsentCheckbox>
           </div>
 
-          <p className="mt-s3 text-sm text-ink/[.75]">
+          <p className="mt-3 text-sm text-navy-500">
             Text alerts are optional &mdash; you can sign up with email only.
           </p>
         </Fieldset>
@@ -408,7 +413,7 @@ export default function SignupForm({ centerCode }: { centerCode: string | null }
             {submitting ? 'Signing you up…' : 'Sign up and find my legislators'}
           </button>
           {/* 70% ink, not 60% — see the note in app/page.tsx. */}
-          <p className="mt-s3 text-center text-[13px] text-ink/[.7]">
+          <p className="mt-3 text-center text-[13px] text-navy-500">
             We never sell or share your information. You can unsubscribe at any time.
           </p>
         </div>

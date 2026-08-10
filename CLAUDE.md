@@ -52,7 +52,8 @@ These are not style preferences. Violating one is a program risk, not a bug.
 
 ## Stack
 
-- Next.js 15 (App Router) + TypeScript + Tailwind
+- Next.js 15 (App Router) + TypeScript + Tailwind (navy/gold GLCCN brand —
+  see README "Design"; gold is an accent only and never carries body text)
 - Postgres via `pg`, plain SQL migrations in `db/`, run with `npm run db:migrate`
 - Zod for validation (`lib/validation.ts`) — the API re-validates everything
 - District matching via the free U.S. Census geocoder (`lib/districts.ts`),

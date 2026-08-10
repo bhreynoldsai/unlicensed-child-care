@@ -16,11 +16,11 @@ export function AdminBar({ email }: { email: string | null }) {
   }
 
   return (
-    <div className="mb-s6 flex flex-wrap items-center justify-between gap-3 border-b border-ink/[.16] pb-s3 text-sm">
-      <span className="text-ink/[.78]">
+    <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-navy-100 pb-s3 text-sm">
+      <span className="text-navy-500">
         {email ? (
           <>
-            Signed in as <strong className="font-semibold text-ink">{email}</strong>
+            Signed in as <strong className="font-semibold text-navy-900">{email}</strong>
           </>
         ) : (
           'Signed in'
@@ -30,7 +30,7 @@ export function AdminBar({ email }: { email: string | null }) {
         type="button"
         onClick={signOut}
         disabled={signingOut}
-        className="rounded-full border-[1.5px] border-ink/[.16] px-3.5 py-1.5 transition hover:border-ink/[.45] disabled:opacity-50"
+        className="rounded-full border-[1.5px] border-navy-100 px-3.5 py-1.5 transition hover:border-navy-500 disabled:opacity-50"
       >
         {signingOut ? 'Signing out…' : 'Sign out'}
       </button>
