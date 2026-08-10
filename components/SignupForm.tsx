@@ -60,6 +60,23 @@ const EMPTY: FormState = {
 
 const ROLE_OPTIONS = ROLES.map((value) => ({ value, label: ROLE_LABELS[value] }))
 
+/**
+ * SMS is paused, not abandoned. The consent box is hidden until a Twilio A2P
+ * 10DLC campaign is registered and Advanced Opt-Out is live, because until then
+ * the text promises "Reply STOP to cancel" and nothing can honour it.
+ *
+ * Hidden by default deliberately: consent you cannot act on should require a
+ * deliberate act to start collecting, not a deliberate act to stop. Set
+ * NEXT_PUBLIC_SHOW_SMS_CONSENT=true once the carrier campaign is approved.
+ *
+ * Everything behind it stays in place — the schema, the consent language, the
+ * sms channel in consent_events. A supporter who signs up while this is hidden
+ * still gets an sms consent row recorded with granted=false, which is the
+ * truthful record: they were never asked.
+ */
+const SHOW_SMS_CONSENT =
+  String(process.env.NEXT_PUBLIC_SHOW_SMS_CONSENT ?? '').trim().toLowerCase() === 'true'
+
 const SUBMIT_ERROR =
   'We could not reach the server. Please check your connection and try again.'
 

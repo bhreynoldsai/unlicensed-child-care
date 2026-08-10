@@ -28,7 +28,10 @@ export const metadata: Metadata = {
   title: 'Stand Up for Licensed Child Care in Georgia',
   description:
     'Join Georgia child care professionals speaking up about license-exempt programs. Sign up to be matched with your state legislators.',
-  robots: { index: false, follow: false }, // flip to true at launch
+  // Launched 2026-08-10. Set back to false only if the site is taken down or
+  // paused — a page that is up but noindex is invisible to anyone searching for
+  // it by name.
+  robots: { index: true, follow: true },
 }
 
 export const viewport: Viewport = {

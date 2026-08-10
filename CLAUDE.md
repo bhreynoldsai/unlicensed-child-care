@@ -27,6 +27,9 @@ These are not style preferences. Violating one is a program risk, not a bug.
 1. **SMS consent is a separate, unticked checkbox** carrying the exact TCPA
    express-consent language in `lib/consent.ts`. Sign-up must succeed with
    **email consent alone**. Never pre-check, bundle, or gate on SMS consent.
+   **Currently hidden** (`NEXT_PUBLIC_SHOW_SMS_CONSENT` unset): the text
+   promises "Reply STOP" and no Twilio campaign exists to honour it. Unhide only
+   once A2P 10DLC is approved and Advanced Opt-Out is on.
 2. **Consent language is verbatim and hashed as legal evidence.** The strings in
    `lib/consent.ts` are stored with every consent record. Do not reword them —
    not for tone, not for length. **They are currently a build-team draft
@@ -143,11 +146,14 @@ receives and how their voice is framed to a legislator.
       `failed` rather than a wrong district. Addresses Census simply does not
       hold still need a commercial geocoder or manual resolution; `/admin`
       shows how many are waiting.
-- [ ] CSV export with `export_audit` logging (Doc 02 §5).
 - [x] QR / shareable link on the confirmation screen. `/poster` generates the
       QR from `SHARE_URL`; the confirmation screen offers the same link with a
       copy button.
-- [ ] Retention job: 24-month inactivity re-consent-or-purge (Doc 03 §6).
+- [ ] Retention job: 24-month inactivity re-consent-or-purge (Doc 03 §6). The
+      privacy notice already promises this, so it is a commitment outstanding,
+      not just a nice-to-have.
+- [x] CSV export with `export_audit` logging (Doc 02 §5), plus a supporter list
+      at `/admin/supporters`.
 - [ ] Confirm the hero photo's licensing, or replace it. It arrived with the
       design handoff as user-supplied stock, and it sits against the design
       brief's own "avoid stock photos of smiling children" guidance.

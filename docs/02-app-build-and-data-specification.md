@@ -126,6 +126,23 @@ variables; none are committed or pasted into chat. A .env.example in the
 repository will document each variable and where Bernard should add the
 value.
 
+8a\. Cell phone — stated use
+
+*Amended 2026-08-10.* SMS is paused, so the cell phone number is not currently
+used for texting. It remains a **required** field, and its stated operational
+uses are:
+
+- a second way to reach a supporter when email bounces or is mistyped, which is
+  common on a form completed quickly on a phone;
+- phone-banking and direct outreach in the districts that matter most during a
+  live vote (Doc 04 §2);
+- the number an SMS programme would use if A2P 10DLC registration is completed
+  before session.
+
+This is recorded here because §2's minimum-necessary rule requires every field
+to map to a stated use. If none of the above remains true, the field should
+become optional or be removed rather than collected out of habit.
+
 9\. Abuse Control
 
 *Amended 2026-08-09. The sign-up form is public and writes to the
