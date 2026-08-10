@@ -70,7 +70,9 @@ interface SupporterRow {
   home_city: string | null
   home_state: string | null
   home_zip: string | null
+  id: string
   employer_name: string
+  employer_street: string | null
   employer_city: string | null
   employer_state: string | null
   employer_zip: string | null
@@ -86,9 +88,17 @@ interface SupporterRow {
   house_member: string | null
   house_party: string | null
   house_email: string | null
+  house_phone: string | null
+  house_url: string | null
   senate_member: string | null
   senate_party: string | null
   senate_email: string | null
+  senate_phone: string | null
+  senate_url: string | null
+  email_consent: boolean | null
+  email_consent_at: Date | null
+  sms_consent: boolean | null
+  sms_consent_at: Date | null
 }
 
 async function fetchRows(
@@ -114,16 +124,32 @@ async function fetchRows(
   // volunteer can act on — a name and an office email.
   const { rows } = await client.query<SupporterRow>(
     `SELECT
-       s.created_at, s.first_name, s.last_name, s.email,
+       s.id, s.created_at, s.first_name, s.last_name, s.email,
        s.cell_phone, s.other_phone,
        s.home_street, s.home_street2, s.home_city, s.home_state, s.home_zip,
-       s.employer_name, s.employer_city, s.employer_state, s.employer_zip,
+       s.employer_name, s.employer_street, s.employer_city, s.employer_state, s.employer_zip,
        s.role::text AS role, s.role_other, s.source_center_code, s.status,
        home.state_house, home.state_senate, home.congressional, home.county,
        home.match_quality,
-       rep.name  AS house_member,  rep.party  AS house_party,  rep.email  AS house_email,
-       sen.name  AS senate_member, sen.party  AS senate_party, sen.email  AS senate_email
+       rep.name AS house_member,  rep.party AS house_party,
+       rep.email AS house_email,  rep.phone AS house_phone,  rep.url AS house_url,
+       sen.name AS senate_member, sen.party AS senate_party,
+       sen.email AS senate_email, sen.phone AS senate_phone, sen.url AS senate_url,
+       -- Latest consent decision per channel. The trail is append-only, so the
+       -- most recent row is the one currently in force.
+       ec.granted AS email_consent, ec.occurred_at AS email_consent_at,
+       sc.granted AS sms_consent,   sc.occurred_at AS sms_consent_at
      FROM supporters s
+     LEFT JOIN LATERAL (
+       SELECT granted, occurred_at FROM consent_events
+        WHERE supporter_id = s.id AND channel = 'email'
+        ORDER BY occurred_at DESC, id DESC LIMIT 1
+     ) ec ON true
+     LEFT JOIN LATERAL (
+       SELECT granted, occurred_at FROM consent_events
+        WHERE supporter_id = s.id AND channel = 'sms'
+        ORDER BY occurred_at DESC, id DESC LIMIT 1
+     ) sc ON true
      LEFT JOIN district_matches home
        ON home.supporter_id = s.id AND home.address_kind = 'home'
      LEFT JOIN legislators rep
@@ -146,10 +172,12 @@ export async function exportSupporters(
     const rows = await fetchRows(client, filter)
 
     const headers = [
+      'supporter_id',
       'signed_up',
       'first_name',
       'last_name',
       'employer',
+      'employer_street',
       'employer_city',
       'employer_state',
       'employer_zip',
@@ -159,24 +187,33 @@ export async function exportSupporters(
       'ga_house_member',
       'ga_house_party',
       'ga_house_email',
+      'ga_house_phone',
+      'ga_house_url',
       'ga_senate_district',
       'ga_senate_member',
       'ga_senate_party',
       'ga_senate_email',
+      'ga_senate_phone',
+      'ga_senate_url',
       'congressional_district',
       'county',
       'match_quality',
       'center_code',
       'status',
+      'email_consent',
+      'email_consent_at',
+      'sms_consent',
+      'sms_consent_at',
     ]
 
-    if (filter.includeContact) headers.splice(3, 0, 'email', 'cell_phone', 'other_phone')
+    if (filter.includeContact) headers.splice(4, 0, 'email', 'cell_phone', 'other_phone')
     if (filter.includeHomeAddress) {
       headers.push('home_street', 'home_street2', 'home_city', 'home_state', 'home_zip')
     }
 
     const body = rows.map((r) => {
       const base: unknown[] = [
+        r.id,
         r.created_at.toISOString().slice(0, 10),
         r.first_name,
         r.last_name,
@@ -184,6 +221,7 @@ export async function exportSupporters(
       if (filter.includeContact) base.push(r.email, r.cell_phone, r.other_phone)
       base.push(
         r.employer_name,
+        r.employer_street,
         r.employer_city,
         r.employer_state,
         r.employer_zip,
@@ -193,15 +231,23 @@ export async function exportSupporters(
         r.house_member,
         r.house_party,
         r.house_email,
+        r.house_phone,
+        r.house_url,
         r.state_senate,
         r.senate_member,
         r.senate_party,
         r.senate_email,
+        r.senate_phone,
+        r.senate_url,
         r.congressional,
         r.county,
         r.match_quality,
         r.source_center_code,
         r.status,
+        r.email_consent === null ? '' : r.email_consent ? 'yes' : 'no',
+        r.email_consent_at ? r.email_consent_at.toISOString() : '',
+        r.sms_consent === null ? '' : r.sms_consent ? 'yes' : 'no',
+        r.sms_consent_at ? r.sms_consent_at.toISOString() : '',
       )
       if (filter.includeHomeAddress) {
         base.push(r.home_street, r.home_street2, r.home_city, r.home_state, r.home_zip)
