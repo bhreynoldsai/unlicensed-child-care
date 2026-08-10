@@ -84,6 +84,14 @@ export default async function AdminPage() {
       <p className="mt-1 text-sm text-navy-500">
         Aggregate counts only. Individual enrollment is never reported.
       </p>
+      <p className="notice mt-4 max-w-3xl">
+        <strong className="font-semibold">Campaign staff only.</strong> These figures
+        are unsuppressed. Before sharing any center- or district-level number with an
+        owner, a director, or the sponsor, run it through{' '}
+        <code>suppressCount()</code> in <code>lib/suppression.ts</code> — counts under
+        5 must read &ldquo;fewer than 5&rdquo;, and a count of zero must never be
+        reported at all (docs/05 §4.4).
+      </p>
 
       {!dbError && (unmatched.failed > 0 || unmatched.approximate > 0) ? (
         <div className="mt-4 rounded-md bg-navy-50 px-[18px] py-4 text-sm leading-[1.55]">

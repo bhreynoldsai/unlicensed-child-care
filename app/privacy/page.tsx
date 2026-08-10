@@ -24,16 +24,32 @@ export const metadata: Metadata = { title: 'Privacy notice' }
  * If any of those change, this page changes with them. A privacy notice that
  * describes something other than the running system is worse than none.
  *
- * Two things counsel must resolve, not developers:
- *   1. Whether Georgia has enacted a comprehensive consumer privacy statute.
- *      As drafted, this assumes it has not and relies on sectoral federal law
- *      plus Georgia's breach-notification statute. Verify against current law.
- *   2. Whether supporters outside Georgia, or covered by another state's law,
- *      are in scope — several state privacy statutes reach residents wherever
- *      the controller sits.
+ * Revised 2026-08-10 against the docs/05 revision-2 review:
+ *   - The notice no longer characterises Georgia statutory coverage at all.
+ *     Georgia enacted SB 111 (Act 462) in 2026; an earlier draft here asserted
+ *     no such statute existed. Describing what we do, rather than what the law
+ *     requires, does not go stale in a legislative session.
+ *   - The 24-month retention promise is gone. It described a job that is not
+ *     built, which is a misrepresentation regardless of intent.
+ *   - Deletion now names its exception: consent records outlive contact
+ *     details, because they are the evidence of permission.
+ *   - Small-cell suppression is stated, so the firewall promise covers
+ *     aggregates as well as individual records.
+ *   - The commercial geocoding fallback is disclosed.
+ *
+ * Still for counsel, not developers: whether supporters outside Georgia are in
+ * scope, and confirmation against the enrolled text of Act 462.
  */
 
-const UPDATED = 'August 9, 2026'
+const UPDATED = 'August 10, 2026'
+
+/**
+ * §6.6: the notice needs a version identifier for the same reason consent
+ * strings are hashed — the campaign must be able to show what a visitor saw on
+ * a given date. Bump this whenever the substance changes, and keep prior
+ * versions reachable.
+ */
+const NOTICE_VERSION = '2026.08.10-2'
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -48,7 +64,9 @@ export default function Privacy() {
   return (
     <div className="mx-auto max-w-frame px-4 pb-16 pt-8 sm:px-6">
       <h1 className="mb-3 text-[clamp(28px,6vw,36px)] leading-[1.15]">Privacy notice</h1>
-      <p className="text-sm text-navy-500">Last updated {UPDATED}</p>
+      <p className="text-sm text-navy-500">
+        Last updated {UPDATED} &middot; Version {NOTICE_VERSION}
+      </p>
 
       <p className="mt-6 text-base leading-[1.65]">
         This notice explains what {SPONSOR_NAME} collects when you sign up, why we
@@ -121,10 +139,13 @@ export default function Privacy() {
         <p>
           Your address is sent to the U.S. Census Bureau&rsquo;s public geocoding
           service, which returns your Georgia House district, Georgia Senate district,
-          congressional district, county, and the map coordinates of the address. We
-          store those results alongside your record. We do the same for your
-          employer&rsquo;s address, so we can understand where licensed programs are
-          concentrated.
+          congressional district, county, and the map coordinates of the address. If
+          the Census service does not hold your address &mdash; common on newer
+          streets &mdash; we send it to a commercial mapping service (Mapbox) to find
+          its coordinates, and then ask the Census service which districts those
+          coordinates fall in. We store those results alongside your record, and we do
+          the same for your employer&rsquo;s address so we can understand where
+          licensed programs are concentrated.
         </p>
         <p>
           If we cannot confidently match your address, we record it as unmatched
@@ -188,9 +209,9 @@ export default function Privacy() {
 
       <Section title="How long we keep it">
         <p>
-          We keep your record while you remain an active supporter. If you have not
-          engaged for 24 months, we will either ask you to re-confirm that you still
-          want to hear from us, or delete your record.
+          We do not keep information longer than we need it. We are building a
+          process to re-confirm or delete the records of supporters who have been
+          inactive for an extended period.
         </p>
         <p>
           If you unsubscribe or ask to be deleted, we keep a minimal record of that
@@ -207,9 +228,9 @@ export default function Privacy() {
           <li>Stop email, stop texts, or stop both</li>
         </ul>
         <p>
-          We will not treat you differently for asking. Depending on where you live,
-          you may have additional rights under your state&rsquo;s law; tell us and we
-          will honor them.
+          We aim to respond within 45 days. We will not treat you differently for
+          asking. Depending on where you live you may have additional rights under
+          your state&rsquo;s law; tell us and we will honor those too.
         </p>
       </Section>
 
@@ -222,8 +243,7 @@ export default function Privacy() {
         </p>
         <p>
           No system is perfectly secure. If a breach affects your personal
-          information, we will notify you as required by Georgia law and any other
-          law that applies to you.
+          information, we will notify you promptly and as required by law.
         </p>
       </Section>
 

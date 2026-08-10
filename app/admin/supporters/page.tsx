@@ -193,6 +193,12 @@ export default async function SupportersPage({
           Home addresses are the most sensitive data here (Doc 03 §5). Pull them only
           when the task genuinely needs them.
         </p>
+        <p className="notice mt-3">
+          These files include <code>center_code</code> and are unsuppressed. Never
+          send one, or any figure derived from one, to a center owner, a director, or
+          the sponsor — at a small center a count identifies who took part in
+          protected activity (docs/05 §4.4).
+        </p>
       </div>
 
       {dbError ? (

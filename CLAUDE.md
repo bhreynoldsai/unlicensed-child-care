@@ -40,10 +40,15 @@ These are not style preferences. Violating one is a program risk, not a bug.
 4. **Participation is voluntary and every material says so.**
    `VOLUNTARY_PARTICIPATION_NOTICE` appears on the sign-up page and on all
    distribution materials.
-5. **Aggregate reporting only.** No manager, owner, or sponsor may ever get
-   individual-level visibility into who enrolled or who acted. Manager-facing
-   reporting reads the `district_density` view, never the `supporters` table.
-   Suppress counts below 5.
+5. **Aggregate reporting only, and aggregates must be big enough.** No manager,
+   owner, or sponsor may ever get individual-level visibility into who enrolled
+   or who acted. Manager-facing reporting reads the `district_density` view,
+   never the `supporters` table. Any figure leaving the campaign goes through
+   `suppressCount()` in `lib/suppression.ts`: counts under 5 read "fewer than
+   5", a count of **zero is never reported at all**, and the sponsor gets no
+   center-level figure at any denominator. At a six-person center an
+   unsuppressed count identifies who took part in protected activity, which is
+   the NLRA impression-of-surveillance risk (docs/05 §4.4).
 6. **Messaging targets the exemption policy** — never faith-based
    organizations, camps, or recreation programs as institutions. The frame is
    child safety and a level playing field.
@@ -150,8 +155,16 @@ receives and how their voice is framed to a legislator.
       QR from `SHARE_URL`; the confirmation screen offers the same link with a
       copy button.
 - [ ] Retention job: 24-month inactivity re-consent-or-purge (Doc 03 §6). The
-      privacy notice already promises this, so it is a commitment outstanding,
-      not just a nice-to-have.
+      privacy notice **no longer promises it** — describing an unbuilt process
+      was the misrepresentation risk. Restore the specific commitment when the
+      job ships, not before.
+- [ ] Quarantine SMS consents collected under the interim text, pending the
+      sender-of-record answer: CTIA §5.1.2.2 makes consent non-transferable, so
+      if the registered A2P brand is a different entity those consents cannot be
+      used (docs/05 §2.4).
+- [ ] Consent record metadata: `form_version`, page URL with center code, and
+      the privacy-notice version in force (docs/05 §8.2). Timestamp, IP, user
+      agent and per-channel storage are already there.
 - [x] CSV export with `export_audit` logging (Doc 02 §5), plus a supporter list
       at `/admin/supporters`.
 - [ ] Confirm the hero photo's licensing, or replace it. It arrived with the
